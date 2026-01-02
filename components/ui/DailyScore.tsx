@@ -29,16 +29,48 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
   // Calculate total score and max score
   const { wins, losses, maxScore, allLangMaxScore, allLangWins, allLangLosses, langScores } = useMemo(() => {
     // Primary UX: show progress for the currently selected language
-    const baseGames = ['wordle', 'connections', 'crossword'] as const;
+    const baseGames = ['wordle', 'connections', 'grid'] as const;
     const gamesCount = baseGames.length;
+
+    const resolveState = (game: (typeof baseGames)[number], langCode: string) => {
+      const directKey = `${game}-${langCode}`;
+      const direct = gameStates[directKey];
+      if (direct) return direct;
+
+      if (langCode.startsWith('pt-')) {
+        const legacyPtKey = `${game}-pt`;
+        const legacyPt = gameStates[legacyPtKey];
+        if (legacyPt && (legacyPt.language === 'pt' || legacyPt.language === langCode)) return legacyPt;
+      }
+
+      const legacy = gameStates[game];
+      if (!legacy) return undefined;
+
+      if (langCode === 'en') return legacy;
+      if (legacy.language === langCode) return legacy;
+      return undefined;
+    };
+
+    const getOutcome = (game: (typeof baseGames)[number], state: unknown) => {
+      if (!state || typeof state !== 'object') return undefined;
+      const s = state as Record<string, unknown>;
+
+      if (s.gameState === 'won' || s.gameState === 'lost') return s.gameState;
+
+      if (game === 'grid' && s.status === 'finished') {
+        return s.attemptsRemaining === 0 ? 'lost' : 'won';
+      }
+
+      return undefined;
+    };
 
     let winsThisLang = 0;
     let lossesThisLang = 0;
     baseGames.forEach((g) => {
-      const key = `${g}-${language}`;
-      const state = gameStates[key] || (language === 'en' ? gameStates[g] : undefined);
-      if (state?.gameState === 'won') winsThisLang++;
-      if (state?.gameState === 'lost') lossesThisLang++;
+      const state = resolveState(g, language);
+      const outcome = getOutcome(g, state);
+      if (outcome === 'won') winsThisLang++;
+      if (outcome === 'lost') lossesThisLang++;
     });
 
     // Optional: completionist totals across all languages
@@ -48,10 +80,10 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
 
     languages.forEach((l) => {
       baseGames.forEach((g) => {
-        const key = `${g}-${l.code}`;
-        const state = gameStates[key] || (l.code === 'en' ? gameStates[g] : undefined);
-        if (state?.gameState === 'won') totalWinsAllLang++;
-        if (state?.gameState === 'lost') totalLossesAllLang++;
+        const state = resolveState(g, l.code);
+        const outcome = getOutcome(g, state);
+        if (outcome === 'won') totalWinsAllLang++;
+        if (outcome === 'lost') totalLossesAllLang++;
       });
     });
 
@@ -60,9 +92,9 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
     languages.forEach((l) => {
       let score = 0;
       baseGames.forEach((g) => {
-        const key = `${g}-${l.code}`;
-        const state = gameStates[key] || (l.code === 'en' ? gameStates[g] : undefined);
-        if (state?.gameState === 'won') score++;
+        const state = resolveState(g, l.code);
+        const outcome = getOutcome(g, state);
+        if (outcome === 'won') score++;
       });
       if (score > 0) scores[l.code] = score;
     });
@@ -77,6 +109,9 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
       langScores: scores,
     };
   }, [gameStates, language]);
+
+  const completed = wins + losses;
+  const allLangCompleted = allLangWins + allLangLosses;
 
   if (variant === 'compact') {
     return (
@@ -150,7 +185,7 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
             </svg>
           </div>
           <span className="text-xl md:text-2xl font-black text-primary tabular-nums">
-            {wins} <span className="text-sm text-primary/40 font-bold">/ {maxScore}</span>
+            {completed} <span className="text-sm text-primary/40 font-bold">/ {maxScore}</span>
           </span>
         </div>
 
@@ -177,7 +212,7 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
       </div>
 
       <div className="text-[10px] font-bold text-text-muted/40 uppercase tracking-wider">
-        {allLangWins} / {allLangMaxScore} • {allLangLosses}
+        {allLangCompleted} / {allLangMaxScore} • {allLangLosses}
       </div>
 
       {/* Language Breakdown */}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useGameStore } from '@/store/useGameStore';
 import { GameCompletedOverlay } from './GameCompletedOverlay';
@@ -130,6 +130,11 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
 
   // Load saved state on mount
   useEffect(() => {
+    const defer = (fn: () => void) => {
+      if (typeof queueMicrotask !== 'undefined') queueMicrotask(fn);
+      else setTimeout(fn, 0);
+    };
+
     const savedState = getGameState('connections', language);
     const alreadyCompleted = isGameComplete('connections', language);
     
@@ -146,11 +151,13 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         
         // But we still need to check if savedState matches language to display correct words
         if (savedState?.language === language) {
-          setAllWords(savedState?.allWords || []);
-          setSelectedWords(savedState?.selectedWords || []);
-          setFoundGroups(savedState?.foundGroups || []);
-          setMistakesRemaining(savedState?.mistakesRemaining ?? 0);
-          setGameState(savedState?.gameState === 'lost' ? 'lost' : 'won');
+          defer(() => {
+            setAllWords(savedState?.allWords || []);
+            setSelectedWords(savedState?.selectedWords || []);
+            setFoundGroups(savedState?.foundGroups || []);
+            setMistakesRemaining(savedState?.mistakesRemaining ?? 0);
+            setGameState(savedState?.gameState === 'lost' ? 'lost' : 'won');
+          });
         } else {
            // If completed in this language but no state? (Unlikely)
            // Or if state is from another language (shouldn't happen if keyed correctly? Wait, getGameState is NOT language keyed yet.)
@@ -166,25 +173,29 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
            // So we initialize new game. Correct.
         }
     } else if (isSamePuzzle) {
-      setAllWords(savedState.allWords || []);
-      setSelectedWords(savedState.selectedWords || []);
-      setFoundGroups(savedState.foundGroups || []);
-      setMistakesRemaining(savedState.mistakesRemaining ?? 4);
-      setGameState(savedState.gameState || 'playing');
+      defer(() => {
+        setAllWords(savedState.allWords || []);
+        setSelectedWords(savedState.selectedWords || []);
+        setFoundGroups(savedState.foundGroups || []);
+        setMistakesRemaining(savedState.mistakesRemaining ?? 4);
+        setGameState(savedState.gameState || 'playing');
+      });
     } else {
       // Initialize with shuffled words from the new groups
       const words = groups.flatMap(g => g.words.map(w => ({ word: w, category: g.category, difficulty: g.difficulty })));
-      setAllWords(words.sort(() => Math.random() - 0.5));
-      setSelectedWords([]);
-      setFoundGroups([]);
-      setMistakesRemaining(groupSize);
-      setGameState('playing');
+      defer(() => {
+        setAllWords(words.sort(() => Math.random() - 0.5));
+        setSelectedWords([]);
+        setFoundGroups([]);
+        setMistakesRemaining(groupSize);
+        setGameState('playing');
+      });
     }
-  }, [groups, getGameState, difficulty, puzzleNumber, isGameComplete, language]); // Added language dep
+  }, [groups, getGameState, difficulty, puzzleNumber, isGameComplete, language, groupSize]); // Added language dep
 
   // Auto-save state whenever it changes
   useEffect(() => {
-    if (allWords.length > 0) {
+    if (allWords.length > 0 || gameState !== 'playing') {
       saveGameState('connections', {
         allWords,
         selectedWords,
@@ -198,27 +209,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
     }
   }, [allWords, selectedWords, foundGroups, mistakesRemaining, gameState, saveGameState, difficulty, puzzleNumber, language]);
 
-  // Keyboard support: Enter to Submit
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && gameState === 'playing' && selectedWords.length === groupSize) {
-        handleSubmit();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameState, selectedWords, groupSize]); // handleSubmit is a non-memoized function but depends on these values indirectly via state closure
-
-  const toggleWord = (word: string) => {
-    if (gameState !== 'playing') return;
-    if (selectedWords.includes(word)) {
-      setSelectedWords(selectedWords.filter(w => w !== word));
-    } else if (selectedWords.length < groupSize) {
-      setSelectedWords([...selectedWords, word]);
-    }
-  };
-
-  const handleSubmit = () => {
+  const handleSubmit = useCallback(() => {
     if (selectedWords.length !== groupSize) return;
 
     const firstWordData = allWords.find(w => w.word === selectedWords[0]);
@@ -252,6 +243,26 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
     }
 
     setTimeout(() => setMessage(''), 2000);
+  }, [selectedWords, groupSize, allWords, groups, foundGroups, t, mistakesRemaining, recordWin, markComplete, language, recordLoss]);
+
+  // Keyboard support: Enter to Submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && gameState === 'playing' && selectedWords.length === groupSize) {
+        handleSubmit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, selectedWords, groupSize, handleSubmit]); // handleSubmit is a non-memoized function but depends on these values indirectly via state closure
+
+  const toggleWord = (word: string) => {
+    if (gameState !== 'playing') return;
+    if (selectedWords.includes(word)) {
+      setSelectedWords(selectedWords.filter(w => w !== word));
+    } else if (selectedWords.length < groupSize) {
+      setSelectedWords([...selectedWords, word]);
+    }
   };
 
   const shuffleWords = () => {
