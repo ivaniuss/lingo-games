@@ -66,5 +66,21 @@ export const CONNECTIONS_DATA: Record<string, ConnectionCategory[]> = {
     { category: 'PALABRAS QUE TERMINAM EM -AL', words: ['CANAL', 'FINAL', 'METAL', 'VOGAL', 'TOTAL'], difficulty: 4 },
     { category: 'METAIS PRECIOSOS', words: ['OURO', 'PRATA', 'PLATINA', 'COBRE', 'PALÁDIO'], difficulty: 1 },
     { category: 'PLANETAS', words: ['MARTE', 'JÚPITER', 'SATURNO', 'VÊNUS', 'MERCÚRIO'], difficulty: 2 }
+  ],
+  'pt-BR': [
+    { category: 'FRUTAS VERMELHAS', words: ['MORANGO', 'CEREJA', 'MELANCIA', 'FRAMBOESA', 'AMEIXA'], difficulty: 1 },
+    { category: 'INSTRUMENTOS DE CORDAS', words: ['GUITARRA', 'VIOLINO', 'HARPA', 'CHELO', 'CONTRABAIXO'], difficulty: 2 },
+    { category: 'CIDADES BRASILEIRAS', words: ['RIO', 'SAO PAULO', 'BRASILIA', 'RECIFE', 'CURITIBA'], difficulty: 3 },
+    { category: 'PALABRAS QUE TERMINAM EM -AL', words: ['CANAL', 'FINAL', 'METAL', 'VOGAL', 'TOTAL'], difficulty: 4 },
+    { category: 'METAIS PRECIOSOS', words: ['OURO', 'PRATA', 'PLATINA', 'COBRE', 'PALÁDIO'], difficulty: 1 },
+    { category: 'PLANETAS', words: ['MARTE', 'JÚPITER', 'SATURNO', 'VÊNUS', 'MERCÚRIO'], difficulty: 2 }
+  ],
+  'pt-PT': [
+    { category: 'FRUTOS VERMELHOS', words: ['MORANGO', 'CEREJA', 'MELANCIA', 'FRAMBOESA', 'AMEIXA'], difficulty: 1 },
+    { category: 'INSTRUMENTOS DE CORDAS', words: ['GUITARRA', 'VIOLINO', 'HARPA', 'VIOLONCELO', 'CONTRABAIXO'], difficulty: 2 },
+    { category: 'CIDADES PORTUGUESAS', words: ['LISBOA', 'PORTO', 'COIMBRA', 'BRAGA', 'FARO'], difficulty: 3 },
+    { category: 'PALAVRAS QUE TERMINAM EM -AL', words: ['CANAL', 'FINAL', 'METAL', 'VOGAL', 'TOTAL'], difficulty: 4 },
+    { category: 'METAIS PRECIOSOS', words: ['OURO', 'PRATA', 'PLATINA', 'COBRE', 'PALÁDIO'], difficulty: 1 },
+    { category: 'PLANETAS', words: ['MARTE', 'JÚPITER', 'SATURNO', 'VÉNUS', 'MERCÚRIO'], difficulty: 2 }
   ]
 };

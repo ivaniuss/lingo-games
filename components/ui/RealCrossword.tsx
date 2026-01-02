@@ -156,8 +156,9 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
   useEffect(() => {
     if (templateGrid && templateGrid.length > 0) {
       // 1. Try loading saved state
-      const savedState = getGameState('grid');
-      if (savedState && savedState.gridData && savedState.gridData.length === height) {
+      const savedState = getGameState('grid', language);
+      const isSameLang = savedState?.language === language;
+      if (savedState && savedState.gridData && savedState.gridData.length === height && isSameLang) {
         setUserGrid(savedState.gridData as (string | null)[][]);
         if (savedState.attemptsRemaining !== undefined) setAttempts(savedState.attemptsRemaining);
         else setAttempts(maxAttempts);
@@ -193,10 +194,11 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
         gridData: userGrid,
         status: isFinished ? 'finished' : 'playing',
         attemptsRemaining: attempts,
-        hintsRemaining
-      });
+        hintsRemaining,
+        language // Save language
+      }, language);
     }
-  }, [userGrid, isFinished, attempts, hintsRemaining, saveGameState]);
+  }, [userGrid, isFinished, attempts, hintsRemaining, saveGameState, language]);
 
   // Helper to find the clue that the user is currently "in"
   const getCurrentClue = useCallback((r: number, c: number, dir: 'across' | 'down') => {
@@ -241,7 +243,7 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
       setIsFinished(true);
       setHasWon(true);
       recordWin('grid');
-      markComplete('grid');
+      markComplete('grid', language);
     } else {
       // Decrement attempts
       const newAttempts = attempts - 1;
@@ -251,13 +253,13 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
         setIsFinished(true);
         setHasWon(false);
         recordLoss('grid');
-        markComplete('grid');
+        markComplete('grid', language);
         // Reveal full grid
         const info = templateGrid.map((row) => row.map((cell) => cell || ''));
         setUserGrid(info);
       }
     }
-  }, [attempts, height, width, userGrid, templateGrid, recordWin, markComplete, recordLoss]);
+  }, [attempts, height, width, userGrid, templateGrid, recordWin, markComplete, recordLoss, language]);
 
   // Navigation helpers (declared before effects to avoid TDZ issues)
   const navigate = useCallback((dr: number, dc: number) => {
@@ -458,7 +460,7 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
   // helpers are declared above
 
   const handleCellClick = (r: number, c: number) => {
-    if (userGrid[r][c] === null) return;
+    if (isFinished || userGrid[r][c] === null) return;
     
     if (selectedCell?.r === r && selectedCell?.c === c) {
       setDirection(d => d === 'across' ? 'down' : 'across');
@@ -501,7 +503,7 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
       {/* GRID CONTAINER */}
       <div className="w-full lg:flex-1 flex justify-center lg:justify-end">
         <div 
-          className="relative bg-black/20 p-3 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-sm"
+          className={`relative bg-black/20 p-3 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-sm ${isFinished ? 'pointer-events-none opacity-80 grayscale-[0.3]' : ''}`}
           style={{ 
             display: 'grid', 
             gridTemplateColumns: `repeat(${width}, minmax(1.8rem, 2.8rem))`,

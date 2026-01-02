@@ -12,6 +12,7 @@ import React, { useState, useEffect } from 'react';
 export default function Home() {
   const { language, setLanguage } = useLanguage();
   const isGameComplete = useGameStore((state) => state.isGameComplete);
+  const completedGames = useGameStore((state) => state.completedGames);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -144,6 +145,48 @@ export default function Home() {
         crossword: { title: 'Crossword', desc: 'Resolva as palavras cruzadas diárias.' },
         connections: { title: 'Conexões', desc: 'Agrupe palavras pelos seus laços secretos.' }
       }
+    },
+    'pt-BR': {
+      heroTitle: 'Aprenda Idiomas Jogando',
+      heroSubtitle: 'Diariamente',
+      heroDesc: '',
+      selectLang: 'Praticar:',
+      getStarted: 'Praticar:',
+      gamesSection: 'Jogos',
+      new: 'NOVO',
+      daily: 'DIÁRIO',
+      completed: 'CONCLUÍDO',
+      playNow: 'Jogar Agora',
+      completedToday: 'Concluído Hoje',
+      comingSoon: 'Em Breve',
+      footerText: 'Novos jogos toda semana.',
+      footerSub: 'Domine idiomas jogando.',
+      games: {
+        wordle: { title: 'Wordle', desc: 'Adivinhe a palavra oculta do dia.' },
+        crossword: { title: 'Crossword', desc: 'Resolva as palavras cruzadas diárias.' },
+        connections: { title: 'Conexões', desc: 'Agrupe palavras pelos seus laços secretos.' }
+      }
+    },
+    'pt-PT': {
+      heroTitle: 'Aprenda Idiomas Jogando',
+      heroSubtitle: 'Diariamente',
+      heroDesc: '',
+      selectLang: 'Praticar:',
+      getStarted: 'Praticar:',
+      gamesSection: 'Jogos',
+      new: 'NOVO',
+      daily: 'DIÁRIO',
+      completed: 'CONCLUÍDO',
+      playNow: 'Jogar Agora',
+      completedToday: 'Concluído Hoje',
+      comingSoon: 'Em Breve',
+      footerText: 'Novos jogos toda semana.',
+      footerSub: 'Domine idiomas jogando.',
+      games: {
+        wordle: { title: 'Wordle', desc: 'Adivinhe a palavra oculta do dia.' },
+        crossword: { title: 'Crossword', desc: 'Resolva as palavras cruzadas diárias.' },
+        connections: { title: 'Conexões', desc: 'Agrupe palavras pelos seus laços secretos.' }
+      }
     }
   };
 
@@ -248,8 +291,8 @@ export default function Home() {
         <section className="w-full max-w-7xl mx-auto px-4 md:px-6 pb-20 md:pb-24 animate-in fade-in slide-in-from-bottom-4 delay-500">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
             {games.map((game, index) => {
-              const checkCompleted = isGameComplete(game.id as 'wordle' | 'connections' | 'grid');
-              const completed = mounted && (game.id === 'crossword' ? isGameComplete('crossword') : checkCompleted);
+              const checkCompleted = isGameComplete(game.id as 'wordle' | 'connections' | 'grid', language);
+              const completed = mounted && checkCompleted;
 
               return (
                 <div key={game.id} className="group h-full">
@@ -268,7 +311,7 @@ export default function Home() {
                     <div className="absolute inset-0 bg-gradient-to-br from-white/0 via-white/0 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
                     
                     {/* Icon Container with refined size */}
-                    <div className="mb-10 relative">
+                    <div className="mb-6 relative">
                       <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full scale-0 group-hover:scale-150 transition-transform duration-1000"></div>
                       <div className={`
                         w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-surface border border-white/10 flex items-center justify-center
@@ -285,9 +328,39 @@ export default function Home() {
                     </h3>
                     
                     {/* Description */}
-                    <p className="text-text-muted text-sm md:text-base leading-relaxed text-center mb-8 flex-1 px-6 group-hover:text-text-muted/100 transition-colors">
+                    <p className="text-text-muted text-sm md:text-base leading-relaxed text-center mb-6 flex-1 px-6 group-hover:text-text-muted/100 transition-colors">
                       {game.description}
                     </p>
+
+                    {/* Completed Languages Indicators */}
+                    {mounted && (() => {
+                      const completedLangs = languages.filter(l => {
+                        const key = `${game.id}-${l.code}`;
+                        // Check explicit key OR legacy key (for English)
+                        return completedGames[key] || (l.code === 'en' && completedGames[game.id]);
+                      });
+
+                      if (completedLangs.length === 0) return null;
+
+                      return (
+                        <div className="mb-6 flex flex-col items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">
+                            {t.completed}:
+                          </span>
+                          <div className="flex gap-2 flex-wrap justify-center px-4">
+                            {completedLangs.map(l => (
+                              <span 
+                                key={l.code} 
+                                className="text-xl filter drop-shadow-md hover:scale-125 transition-transform cursor-help"
+                                title={l.name}
+                              >
+                                {l.flag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                     
                     {/* CTA Button */}
                     <div className={`

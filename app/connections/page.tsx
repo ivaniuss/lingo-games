@@ -6,6 +6,7 @@ import { useGameStore } from '@/store/useGameStore';
 import { GameHeader } from '@/components/layout/GameHeader';
 import { ConnectionsGame } from '@/components/ui/ConnectionsGame';
 import { GameWrapper } from '@/components/layout/GameWrapper';
+import { GameCompletedOverlay } from '@/components/ui/GameCompletedOverlay';
 
 const GAME_TITLE = 'Connections';
 
@@ -17,7 +18,12 @@ const TRANSLATIONS = {
     error: "Failed to load today's challenge. Please try again later.",
     easy: 'Easy',
     normal: 'Normal', 
-    hard: 'Hard'
+    hard: 'Hard',
+    won: 'EXCELLENT!',
+    won_msg: 'You have found all the groups!',
+    lost: 'GAME OVER',
+    lost_msg: 'Better luck next time!',
+    groups: 'The groups were:'
   },
   es: {
     description: 'Encuentra {n} grupos de {n} palabras que tengan algo en común.',
@@ -26,7 +32,12 @@ const TRANSLATIONS = {
     error: 'No se pudo cargar el reto de hoy. Por favor, inténtalo de nuevo más tarde.',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    won: '¡EXCELENTE!',
+    won_msg: '¡Has encontrado todos los grupos!',
+    lost: 'JUEGO TERMINADO',
+    lost_msg: '¡Mejor suerte la próxima vez!',
+    groups: 'Los grupos eran:'
   },
   fr: {
     description: 'Trouvez {n} groupes de {n} mots ayant un point commun.',
@@ -35,7 +46,12 @@ const TRANSLATIONS = {
     error: "Échec du chargement du défi d'aujourd'hui. Veuillez réessayer plus tard.",
     easy: 'Facile',
     normal: 'Normal',
-    hard: 'Difficile'
+    hard: 'Difficile',
+    won: 'EXCELLENT !',
+    won_msg: 'Vous avez trouvé tous les groupes !',
+    lost: 'PERDU',
+    lost_msg: 'Plus de chance la prochaine fois !',
+    groups: 'Les groupes étaient :'
   },
   de: {
     description: 'Finde {n} Gruppen von {n} Wörtern, die etwas gemeinsam haben.',
@@ -44,7 +60,12 @@ const TRANSLATIONS = {
     error: 'Die heutige Herausforderung konnte nicht geladen werden. Bitte versuchen Sie es später erneut.',
     easy: 'Leicht',
     normal: 'Normal',
-    hard: 'Schwierig'
+    hard: 'Schwierig',
+    won: 'AUSGEZEICHNET!',
+    won_msg: 'Sie haben alle Gruppen gefunden!',
+    lost: 'SPIEL VORBEI',
+    lost_msg: 'Viel Glück beim nächsten Mal!',
+    groups: 'Die Gruppen waren:'
   },
   it: {
     description: 'Trova {n} gruppi di {n} parole che hanno qualcosa in comune.',
@@ -53,16 +74,54 @@ const TRANSLATIONS = {
     error: 'Impossibile caricare la sfida di oggi. Riprova più tardi.',
     easy: 'Facile',
     normal: 'Normale',
-    hard: 'Difficile'
+    hard: 'Difficile',
+    won: 'ECCELLENTE!',
+    won_msg: 'Hai trovato tutti i gruppi!',
+    lost: 'GAME OVER',
+    lost_msg: 'Buona fortuna per la prossima volta!',
+    groups: 'I gruppi erano:'
   },
   pt: {
     description: 'Encontre {n} grupos de {n} palavras que tenham algo em comum.',
     helper: 'Selecione {n} palavras e pressione enviar',
     loading: 'Carregando...',
-    error: 'Falha ao carregar o desafío de hoje. Por favor, tente novamente mais tarde.',
+    error: 'Falha ao carregar o desafio de hoje. Por favor, tente novamente mais tarde.',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    won: 'EXCELENTE!',
+    won_msg: 'Você encontrou todos os grupos!',
+    lost: 'FIM DE JOGO',
+    lost_msg: 'Mais sorte da próxima vez!',
+    groups: 'Os grupos eram:'
+  },
+  'pt-BR': {
+    description: 'Encontre {n} grupos de {n} palavras que tenham algo em comum.',
+    helper: 'Selecione {n} palavras e pressione enviar',
+    loading: 'Carregando...',
+    error: 'Falha ao carregar o desafio de hoje. Por favor, tente novamente mais tarde.',
+    easy: 'Fácil',
+    normal: 'Normal',
+    hard: 'Difícil',
+    won: 'EXCELENTE!',
+    won_msg: 'Você encontrou todos os grupos!',
+    lost: 'FIM DE JOGO',
+    lost_msg: 'Mais sorte da próxima vez!',
+    groups: 'Os grupos eram:'
+  },
+  'pt-PT': {
+    description: 'Encontre {n} grupos de {n} palavras que tenham algo em comum.',
+    helper: 'Selecione {n} palavras e pressione enviar',
+    loading: 'Carregando...',
+    error: 'Falha ao carregar o desafio de hoje. Por favor, tente novamente mais tarde.',
+    easy: 'Fácil',
+    normal: 'Normal',
+    hard: 'Difícil',
+    won: 'EXCELENTE!',
+    won_msg: 'Encontrou todos os grupos!',
+    lost: 'FIM DE JOGO',
+    lost_msg: 'Mais sorte da próxima vez!',
+    groups: 'Os grupos eram:'
   }
 };
 
@@ -70,7 +129,10 @@ export default function ConnectionsPage() {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
 
-  const isGameComplete = useGameStore((state) => state.isGameComplete('connections'));
+  const isGameComplete = useGameStore((state) => state.isGameComplete('connections', language));
+  // Retrieve saved state to know if won/lost
+  const savedState = useGameStore((state) => state.gameStates[language ? `connections-${language}` : 'connections']);
+  
   const [gameData, setGameData] = useState<{ groups: any[], number: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
@@ -126,6 +188,24 @@ export default function ConnectionsPage() {
 
   return (
     <GameWrapper title={GAME_TITLE} gameId="">
+      <GameCompletedOverlay 
+        isOpen={isGameComplete}
+        variant={savedState?.gameState === 'lost' ? 'failure' : 'success'}
+        title={savedState?.gameState === 'lost' ? t.lost : t.won}
+        message={savedState?.gameState === 'lost' ? t.lost_msg : t.won_msg}
+        solutionContent={
+          <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10 w-full max-w-sm">
+             <div className="text-xs font-black uppercase tracking-widest text-text-muted text-center mb-2">{t.groups}</div>
+             {gameData.groups.map((group, idx) => (
+                <div key={idx} className={`p-3 rounded-lg flex flex-col items-center justify-center text-center`} style={{ backgroundColor: group.color || 'rgba(255,255,255,0.1)' }}>
+                  <div className="font-bold text-bg-deep uppercase text-sm">{group.category}</div>
+                  <div className="text-bg-deep/80 text-xs">{group.words.join(', ')}</div>
+                </div>
+             ))}
+          </div>
+        }
+      />
+      
       <div className="flex flex-col items-center justify-center flex-1 w-full py-8">
         
         <GameHeader 

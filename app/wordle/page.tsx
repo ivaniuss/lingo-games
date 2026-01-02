@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
-import { SoftKeyboard } from '@/components/ui/SoftKeyboard';
 import { GameHeader } from '@/components/layout/GameHeader';
 import { GameWrapper } from '@/components/layout/GameWrapper';
 import { useGameStore } from '@/store/useGameStore';
@@ -21,6 +20,7 @@ const TRANSLATIONS = {
     next: 'NEXT CHALLENGE',
     show_keyboard: 'Show keyboard',
     close: 'Close',
+    theWordWas: 'The word was',
     easy: 'Easy',
     normal: 'Normal', 
     hard: 'Hard'
@@ -35,6 +35,7 @@ const TRANSLATIONS = {
     next: 'SIGUIENTE RETO',
     show_keyboard: 'Mostrar teclado',
     close: 'Cerrar',
+    theWordWas: 'La palabra era',
     easy: 'Fácil',
     normal: 'Normal',
     hard: 'Difícil'
@@ -49,6 +50,7 @@ const TRANSLATIONS = {
     next: 'DÉFI SUIVANT',
     show_keyboard: 'Afficher le clavier',
     close: 'Fermer',
+    theWordWas: 'Le mot était',
     easy: 'Facile',
     normal: 'Normal',
     hard: 'Difficile'
@@ -63,6 +65,7 @@ const TRANSLATIONS = {
     next: 'NÄCHSTE HERAUSFORDERUNG',
     show_keyboard: 'Tastatur anzeigen',
     close: 'Schließen',
+    theWordWas: 'Das Wort war',
     easy: 'Leicht',
     normal: 'Normal',
     hard: 'Schwierig'
@@ -77,6 +80,7 @@ const TRANSLATIONS = {
     next: 'PROSSIMA SFIDA',
     show_keyboard: 'Mostra tastiera',
     close: 'Chiudi',
+    theWordWas: 'La parola era',
     easy: 'Facile',
     normal: 'Normale',
     hard: 'Difficile'
@@ -91,6 +95,37 @@ const TRANSLATIONS = {
     next: 'PRÓXIMO DESAFIO',
     show_keyboard: 'Mostrar teclado',
     close: 'Fechar',
+    theWordWas: 'A palavra era',
+    easy: 'Fácil',
+    normal: 'Normal',
+    hard: 'Difícil'
+  },
+  'pt-BR': {
+    description: 'Adivinhe a palavra oculta do dia em {n} tentativas ou menos.',
+    helper: 'Use o seu teclado para digitar • ENTER para enviar',
+    won: 'EXCELENTE!',
+    lost: 'FIM DE JOGO',
+    won_msg: 'Você decifrou a palavra do dia brilhantemente.',
+    lost_msg: (word: string) => `Não se preocupe, a palavra era: ${word}`,
+    next: 'PRÓXIMO DESAFIO',
+    show_keyboard: 'Mostrar teclado',
+    close: 'Fechar',
+    theWordWas: 'A palavra era',
+    easy: 'Fácil',
+    normal: 'Normal',
+    hard: 'Difícil'
+  },
+  'pt-PT': {
+    description: 'Adivinhe a palavra oculta do dia em {n} tentativas ou menos.',
+    helper: 'Use o seu teclado para digitar • ENTER para enviar',
+    won: 'EXCELENTE!',
+    lost: 'FIM DE JOGO',
+    won_msg: 'Você decifrou a palavra do dia brilhantemente.',
+    lost_msg: (word: string) => `Não se preocupe, a palavra era: ${word}`,
+    next: 'PRÓXIMO DESAFIO',
+    show_keyboard: 'Mostrar teclado',
+    close: 'Fechar',
+    theWordWas: 'A palavra era',
     easy: 'Fácil',
     normal: 'Normal',
     hard: 'Difícil'
@@ -119,6 +154,7 @@ export default function WordlePage() {
   const recordWin = useGameStore((state) => state.recordWin);
   const recordLoss = useGameStore((state) => state.recordLoss);
   const markComplete = useGameStore((state) => state.markComplete);
+  const isGameComplete = useGameStore((state) => state.isGameComplete);
   
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   const [targetWords, setTargetWords] = useState<string[]>([]);
@@ -129,7 +165,6 @@ export default function WordlePage() {
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
   const mobileInputRef = useRef<HTMLInputElement | null>(null);
-  const [showKeyboard, setShowKeyboard] = useState(false);
   
   // Reset game when difficulty changes
   const handleDifficultyChange = (newDifficulty: 'easy' | 'normal' | 'hard') => {
@@ -149,21 +184,37 @@ export default function WordlePage() {
     fetch(`/api/daily-word?lang=${language}&difficulty=${difficulty}`)
       .then(res => res.json())
       .then(data => {
-        const savedState = getGameState('wordle');
+        const savedState = getGameState('wordle', language);
         
         // Conditions to restore progress:
         // 1. Saved state exists
         // 2. It's the same day (puzzleNumber)
         // 3. It's the same difficulty
-        // 4. (Optional but good) It matches the current language 
-        //    (Note: if lang changed, we usually want new words unless we specifically track per-lang progress)
+        // 4. It matches the current language
         
         const isSameGame = savedState && 
                           savedState.puzzleNumber === data.number && 
-                          savedState.difficulty === difficulty;
+                          savedState.difficulty === difficulty &&
+                          savedState.language === language; // Validate language
 
-        if (isSameGame) {
-          // Restore progress for this day/difficulty
+        // Check if game is already marked as complete for today in THIS language
+        const alreadyCompleted = isGameComplete('wordle', language);
+
+        if (alreadyCompleted) {
+          // If completed, load state but force game over UI
+          // Only load if state matches language (sanity check)
+          if (savedState?.language === language) {
+            setTargetWords(savedState?.targetWords || data.words || []);
+            setWordLength(savedState?.wordLength || data.wordLength || 6);
+            setMaxGuesses(savedState?.maxGuesses || data.maxGuesses || 6);
+            setPuzzleNumber(data.number);
+            setGuesses(savedState?.guesses || []);
+            setCurrentGuess('');
+            // Ensure we show the overlay
+            setGameState(savedState?.gameState === 'lost' ? 'lost' : 'won');
+          }
+        } else if (isSameGame) {
+          // Restore progress for this day/difficulty/language
           setTargetWords(savedState.targetWords || []);
           setWordLength(savedState.wordLength || 6);
           setMaxGuesses(savedState.maxGuesses || 6);
@@ -172,7 +223,7 @@ export default function WordlePage() {
           setCurrentGuess(savedState.currentGuess || '');
           setGameState(savedState.gameState || 'playing');
         } else {
-          // Start a fresh game for the new day or difficulty
+          // Start a fresh game for the new day or difficulty or language
           setTargetWords(data.words || []);
           setWordLength(data.wordLength || 6);
           setMaxGuesses(data.maxGuesses || 6);
@@ -183,7 +234,7 @@ export default function WordlePage() {
         }
       })
       .catch(err => console.error('Failed to fetch words:', err));
-  }, [language, difficulty, getGameState]);
+  }, [language, difficulty, getGameState, isGameComplete]);
 
   // Auto-save state whenever it changes
   useEffect(() => {
@@ -197,9 +248,10 @@ export default function WordlePage() {
         maxGuesses,
         difficulty,
         puzzleNumber,
-      });
+        language, // Save language
+      }, language);
     }
-  }, [guesses, currentGuess, gameState, targetWords, wordLength, maxGuesses, difficulty, puzzleNumber, saveGameState]);
+  }, [guesses, currentGuess, gameState, targetWords, wordLength, maxGuesses, difficulty, puzzleNumber, saveGameState, language]);
 
   const handleType = useCallback((key: string) => {
     if (gameState !== 'playing' || !targetWord) return;
@@ -246,13 +298,13 @@ export default function WordlePage() {
       // 3. Side effects (Outside of updaters!)
       if (nextGameState === 'won') {
         recordWin('wordle');
-        markComplete('wordle');
+        markComplete('wordle', language);
       } else {
         recordLoss('wordle');
-        markComplete('wordle');
+        markComplete('wordle', language);
       }
     }
-  }, [currentGuess, guesses, gameState, targetWord, maxGuesses, recordWin, markComplete, recordLoss]);
+  }, [currentGuess, guesses, gameState, targetWord, maxGuesses, recordWin, markComplete, recordLoss, language]);
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (gameState !== 'playing' || !targetWord) return;
@@ -337,7 +389,7 @@ export default function WordlePage() {
         message={gameState === 'won' ? t.won_msg : t.lost_msg(targetWord)}
         solutionContent={
           <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
-             <div className="text-xs font-black uppercase tracking-widest text-text-muted">The word was</div>
+             <div className="text-xs font-black uppercase tracking-widest text-text-muted">{t.theWordWas}</div>
              <div className="text-3xl md:text-5xl font-black tracking-widest text-primary drop-shadow-[0_0_15px_rgba(45,201,172,0.5)]">
                {targetWord}
              </div>
@@ -356,7 +408,9 @@ export default function WordlePage() {
       >
         
         {/* Game Board */}
-        <div className="grid gap-2 md:gap-3 mb-12 md:mb-16 animate-in zoom-in-95 duration-500 p-4 rounded-3xl bg-glass/10 backdrop-blur-sm border border-white/5 shadow-2xl">
+        <div className={`grid gap-2 md:gap-3 mb-12 md:mb-16 animate-in zoom-in-95 duration-500 p-4 rounded-3xl bg-glass/10 backdrop-blur-sm border border-white/5 shadow-2xl transition-all ${
+          gameState !== 'playing' ? 'pointer-events-none opacity-50 grayscale contrast-125' : ''
+        }`}>
           {Array.from({ length: maxGuesses }).map((_, rowIndex) => {
             const guess = guesses[rowIndex];
             const isCurrentRow = rowIndex === guesses.length;
@@ -406,52 +460,6 @@ export default function WordlePage() {
           aria-hidden="true"
         />
 
-        {/* Toggle keyboard button (hidden while sheet open) */}
-        {!showKeyboard && (
-          <button
-            type="button"
-            onClick={() => setShowKeyboard(true)}
-            className="fixed bottom-4 left-4 z-40 px-4 py-2 rounded-full bg-white/10 text-white border border-white/20 text-xs font-bold backdrop-blur hover:bg-white/20 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-          >
-            {t.show_keyboard}
-          </button>
-        )}
-
-        {/* On-screen keyboard (bottom sheet) */}
-        {showKeyboard && (
-          <div className="fixed inset-x-0 bottom-0 z-50 bg-bg-deep/95 backdrop-blur-lg border-t border-white/10 p-3 pt-2 pb-[max(16px,env(safe-area-inset-bottom))]">
-            {/* Sheet handle + close */}
-            <div className="w-full flex justify-center px-2">
-              <div className="w-full max-w-xl">
-                <div className="flex flex-col items-center mb-2">
-                  <div className="h-1.5 w-12 rounded-full bg-white/15" />
-                  <button
-                    aria-label="Ocultar teclado"
-                    onClick={() => setShowKeyboard(false)}
-                    className="mt-2 px-2 py-1 rounded-md text-xs font-bold text-white/80 hover:text-white hover:bg-white/10"
-                  >
-                    {t.close}
-                  </button>
-                </div>
-                <SoftKeyboard
-                  locale={language}
-                  extraKeys={extraKeysFiltered}
-                  onKey={(k) => {
-                    if (gameState !== 'playing' || !targetWord) return;
-                    if (k === 'Backspace') handleBackspace();
-                    else if (k === 'Enter') handleEnter();
-                    else handleType(k);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Spacer to avoid content being covered by keyboard sheet */}
-        {showKeyboard && (
-          <div className="h-64 md:h-56" />
-        )}
       </div>
     </GameWrapper>
   );

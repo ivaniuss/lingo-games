@@ -18,7 +18,12 @@ const TRANSLATIONS = {
     error: "Failed to load today's challenge. Please try again later.",
     easy: 'Easy',
     normal: 'Normal',
-    hard: 'Hard'
+    hard: 'Hard',
+    won: 'PUZZLE SOLVED!',
+    won_msg: 'You successfully completed the crossword!',
+    lost: 'GAME OVER',
+    lost_msg: 'Better luck next time!',
+    solution: 'Solution'
   },
   es: {
     description: 'Resuelve el crucigrama adivinando palabras por su categoría.',
@@ -27,7 +32,12 @@ const TRANSLATIONS = {
     error: 'No se pudo cargar el reto de hoy. Por favor, inténtalo de nuevo más tarde.',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    won: '¡EXCELENTE!',
+    won_msg: '¡Has completado el crucigrama!',
+    lost: 'JUEGO TERMINADO',
+    lost_msg: '¡Mejor suerte la próxima vez!',
+    solution: 'Solución'
   },
   fr: {
     description: 'Résolvez les mots fléchés en devinant les mots par leurs catégories.',
@@ -36,7 +46,12 @@ const TRANSLATIONS = {
     error: "Échec du chargement du défi d'aujourd'hui. Veuillez réessayer plus tard.",
     easy: 'Facile',
     normal: 'Normal',
-    hard: 'Difficile'
+    hard: 'Difficile',
+    won: 'EXCELLENT !',
+    won_msg: 'Vous avez terminé les mots fléchés !',
+    lost: 'PERDU',
+    lost_msg: 'Plus de chance la prochaine fois !',
+    solution: 'Solution'
   },
   de: {
     description: 'Löse das Kreuzworträtsel, indem du Wörter aus ihren Kategorien errätst.',
@@ -45,7 +60,12 @@ const TRANSLATIONS = {
     error: 'Die heutige Herausforderung konnte nicht geladen werden. Bitte versuchen Sie es später erneut.',
     easy: 'Leicht',
     normal: 'Normal',
-    hard: 'Schwierig'
+    hard: 'Schwierig',
+    won: 'GROSSARTIG!',
+    won_msg: 'Sie haben das Kreuzworträtsel gelöst!',
+    lost: 'SPIEL VORBEI',
+    lost_msg: 'Viel Glück beim nächsten Mal!',
+    solution: 'Lösung'
   },
   it: {
     description: 'Risolvi il cruciverba indovinando le parole dalle loro categorie.',
@@ -54,7 +74,12 @@ const TRANSLATIONS = {
     error: 'Impossibile caricare la sfida di oggi. Riprova più tardi.',
     easy: 'Facile',
     normal: 'Normale',
-    hard: 'Difficile'
+    hard: 'Difficile',
+    won: 'ECCELLENTE!',
+    won_msg: 'Hai completato il cruciverba!',
+    lost: 'GAME OVER',
+    lost_msg: 'Buona fortuna per la prossima volta!',
+    solution: 'Soluzione'
   },
   pt: {
     description: 'Resolva as palavras cruzadas adivinhando palavras de suas categorias.',
@@ -63,7 +88,40 @@ const TRANSLATIONS = {
     error: 'Falha ao carregar o desafio de hoje. Por favor, tente novamente mais tarde.',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    won: 'EXCELENTE!',
+    won_msg: 'Você completou as palavras cruzadas!',
+    lost: 'FIM DE JOGO',
+    lost_msg: 'Mais sorte da próxima vez!',
+    solution: 'Solução'
+  },
+  'pt-BR': {
+    description: 'Resolva as palavras cruzadas adivinhando palavras de suas categorias.',
+    helper: 'Clique em uma célula para começar',
+    loading: 'Carregando...',
+    error: 'Falha ao carregar o desafio de hoje. Por favor, tente novamente mais tarde.',
+    easy: 'Fácil',
+    normal: 'Normal',
+    hard: 'Difícil',
+    won: 'EXCELENTE!',
+    won_msg: 'Você completou as palavras cruzadas!',
+    lost: 'FIM DE JOGO',
+    lost_msg: 'Mais sorte da próxima vez!',
+    solution: 'Solução'
+  },
+  'pt-PT': {
+    description: 'Resolva as palavras cruzadas adivinhando palavras de suas categorias.',
+    helper: 'Clique em uma célula para começar',
+    loading: 'Carregando...',
+    error: 'Falha ao carregar o desafio de hoje. Por favor, tente novamente mais tarde.',
+    easy: 'Fácil',
+    normal: 'Normal',
+    hard: 'Difícil',
+    won: 'EXCELENTE!',
+    won_msg: 'Completou as palavras cruzadas!',
+    lost: 'FIM DE JOGO',
+    lost_msg: 'Mais sorte da próxima vez!',
+    solution: 'Solução'
   }
 };
 
@@ -97,7 +155,10 @@ export default function LingoGridPage() {
   const [loading, setLoading] = useState(true);
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   
-  const isGameComplete = useGameStore((state) => state.isGameComplete);
+  // FIX: Use selector to get boolean value directly for reactivity
+  const isGameComplete = useGameStore((state) => state.isGameComplete('grid', language));
+  const savedState = useGameStore((state) => state.gameStates[language ? `grid-${language}` : 'grid']);
+
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -139,7 +200,22 @@ export default function LingoGridPage() {
 
   return (
     <GameWrapper title={GAME_TITLE} gameId="">
-      {isGameComplete('grid') && <GameCompletedOverlay />}
+      <GameCompletedOverlay 
+        isOpen={isGameComplete}
+        variant={savedState?.gameState === 'lost' ? 'failure' : 'success'}
+        title={savedState?.gameState === 'lost' ? t.lost : t.won}
+        message={savedState?.gameState === 'lost' ? t.lost_msg : t.won_msg}
+        solutionContent={
+          <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10 w-full max-w-sm">
+             {/* Crossword solution is usually visible on board, but we can add specific info here if needed */}
+             <div className="text-xs font-black uppercase tracking-widest text-text-muted text-center">{t.solution}</div>
+             <div className="text-center text-sm opacity-80 italic">
+               {/* Just a placeholder or summary could go here */}
+               {t.won_msg}
+             </div>
+          </div>
+        }
+      />
 
       <div className="flex flex-col items-center justify-center flex-1 w-full">
         <GameHeader 

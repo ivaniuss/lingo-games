@@ -40,6 +40,18 @@ const TRANSLATIONS = {
     message: 'Você já jogou este jogo hoje.',
     nextGame: 'Próximo jogo disponível em:',
     backHome: 'Voltar ao Início'
+  },
+  'pt-BR': {
+    title: 'Jogo Concluído!',
+    message: 'Você já jogou este jogo hoje.',
+    nextGame: 'Próximo jogo disponível em:',
+    backHome: 'Voltar ao Início'
+  },
+  'pt-PT': {
+    title: 'Jogo Concluído!',
+    message: 'Você já jogou este jogo hoje.',
+    nextGame: 'Próximo jogo disponível em:',
+    backHome: 'Voltar ao Início'
   }
 };
 

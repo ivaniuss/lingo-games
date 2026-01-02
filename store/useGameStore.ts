@@ -46,10 +46,10 @@ interface GameStore {
   dailyScores: Record<GameType, GameScore>;
   
   // Completion tracking
-  completedGames: Record<GameType, boolean>;
+  completedGames: Record<string, boolean>;
   
-  // Game states
-  gameStates: GameState;
+  // Game states (now supports dynamic keys for languages)
+  gameStates: Record<string, any>;
   
   // Last play date for daily reset
   lastPlayDate: string;
@@ -57,10 +57,10 @@ interface GameStore {
   // Actions
   recordWin: (game: GameType) => void;
   recordLoss: (game: GameType) => void;
-  saveGameState: (game: GameType, state: any) => void;
-  getGameState: (game: GameType) => any;
-  markComplete: (game: GameType) => void;
-  isGameComplete: (game: GameType) => boolean;
+  saveGameState: (game: GameType, state: any, lang?: string) => void;
+  getGameState: (game: GameType, lang?: string) => any;
+  markComplete: (game: GameType, lang?: string) => void;
+  isGameComplete: (game: GameType, lang?: string) => boolean;
   checkAndResetDaily: () => void;
   getTotalScore: () => { wins: number; losses: number };
 }
@@ -79,12 +79,7 @@ export const useGameStore = create<GameStore>()(
         grid: { wins: 0, losses: 0 },
         crossword: { wins: 0, losses: 0 },
       },
-      completedGames: {
-        wordle: false,
-        connections: false,
-        grid: false,
-        crossword: false,
-      },
+      completedGames: {},
       gameStates: {},
       lastPlayDate: getTodayDate(),
 
@@ -114,34 +109,49 @@ export const useGameStore = create<GameStore>()(
         }));
       },
 
-      saveGameState: (game, state) => {
+      saveGameState: (game, state, lang) => {
         get().checkAndResetDaily();
+        const key = lang ? `${game}-${lang}` : game;
         set((currentState) => ({
           gameStates: {
             ...currentState.gameStates,
-            [game]: state,
+            [key]: state,
           },
         }));
       },
 
-      getGameState: (game) => {
+      getGameState: (game, lang) => {
         get().checkAndResetDaily();
-        return get().gameStates[game];
+        const key = lang ? `${game}-${lang}` : game;
+        const specificState = get().gameStates[key];
+        
+        if (specificState) return specificState;
+        
+        // Strict Fallback Logic:
+        // Only fall back to the legacy 'game' key (e.g. 'wordle') if the requested language is 'en'
+        // This prevents 'es' games from loading 'en' state (e.g. "BECOME")
+        if (lang === 'en' || !lang) {
+           return get().gameStates[game];
+        }
+        
+        return undefined;
       },
 
-      markComplete: (game) => {
+      markComplete: (game, lang) => {
         get().checkAndResetDaily();
+        const key = lang ? `${game}-${lang}` : game;
         set((state) => ({
           completedGames: {
             ...state.completedGames,
-            [game]: true,
+            [key]: true,
           },
         }));
       },
 
-      isGameComplete: (game) => {
+      isGameComplete: (game, lang) => {
         get().checkAndResetDaily();
-        return get().completedGames[game];
+        const key = lang ? `${game}-${lang}` : game;
+        return !!get().completedGames[key];
       },
 
       getTotalScore: () => {

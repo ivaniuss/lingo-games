@@ -83,6 +83,28 @@ const TRANSLATIONS = {
     deselect: 'Desmarcar tudo',
     submit: 'Enviar',
     playAgain: 'Jogar novamente'
+  },
+  'pt-BR': {
+    excellent: 'Excelente!',
+    tryAgain: 'Tente novamente',
+    won: 'Parabéns! Você ganhou.',
+    lost: 'Fim de jogo. Você ficou sem tentativas.',
+    mistakes: 'Erros:',
+    shuffle: 'Embaralhar',
+    deselect: 'Desmarcar tudo',
+    submit: 'Enviar',
+    playAgain: 'Jogar novamente'
+  },
+  'pt-PT': {
+    excellent: 'Excelente!',
+    tryAgain: 'Tente novamente',
+    won: 'Parabéns! Você ganhou.',
+    lost: 'Fim de jogo. Você ficou sem tentativas.',
+    mistakes: 'Erros:',
+    shuffle: 'Embaralhar',
+    deselect: 'Desmarcar tudo',
+    submit: 'Enviar',
+    playAgain: 'Jogar novamente'
   }
 };
 
@@ -95,6 +117,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
   const recordWin = useGameStore((state) => state.recordWin);
   const recordLoss = useGameStore((state) => state.recordLoss);
   const markComplete = useGameStore((state) => state.markComplete);
+  const isGameComplete = useGameStore((state) => state.isGameComplete);
 
   const [allWords, setAllWords] = useState<{ word: string; category: string; difficulty: number }[]>([]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
@@ -107,14 +130,42 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
 
   // Load saved state on mount
   useEffect(() => {
-    const savedState = getGameState('connections');
+    const savedState = getGameState('connections', language);
+    const alreadyCompleted = isGameComplete('connections', language);
     
     // Check if the saved state matches the CURRENT groups (difficulty change or new day)
     const isSamePuzzle = savedState && 
                          savedState.puzzleNumber === puzzleNumber &&
-                         savedState.difficulty === difficulty;
+                         savedState.difficulty === difficulty &&
+                         savedState.language === language; // Verify language matches
 
-    if (isSamePuzzle) {
+    if (alreadyCompleted) {
+        // If completed, ensure we show the finished state
+        // Only load if the completed game was in THIS language.
+        // Since isGameComplete is now language-aware, this check is implicit.
+        
+        // But we still need to check if savedState matches language to display correct words
+        if (savedState?.language === language) {
+          setAllWords(savedState?.allWords || []);
+          setSelectedWords(savedState?.selectedWords || []);
+          setFoundGroups(savedState?.foundGroups || []);
+          setMistakesRemaining(savedState?.mistakesRemaining ?? 0);
+          setGameState(savedState?.gameState === 'lost' ? 'lost' : 'won');
+        } else {
+           // If completed in this language but no state? (Unlikely)
+           // Or if state is from another language (shouldn't happen if keyed correctly? Wait, getGameState is NOT language keyed yet.)
+           // getGameState is global per game type. 
+           // So if I switch language, savedState might be from 'en'.
+           // If it is, we should NOT load it.
+           // Proceed to initialize fetch logic (fallback to new game?)
+           // But if alreadyCompleted is true, we want to show result.
+           // If I completed Spanish, savedState should be Spanish.
+           // If I completed English, then switch to Spanish, alreadyCompleted (Spanish) is false.
+           // So we fall through to else if (isSamePuzzle).
+           // isSamePuzzle checks language. So it will be false.
+           // So we initialize new game. Correct.
+        }
+    } else if (isSamePuzzle) {
       setAllWords(savedState.allWords || []);
       setSelectedWords(savedState.selectedWords || []);
       setFoundGroups(savedState.foundGroups || []);
@@ -129,7 +180,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
       setMistakesRemaining(groupSize);
       setGameState('playing');
     }
-  }, [groups, getGameState, difficulty, puzzleNumber]);
+  }, [groups, getGameState, difficulty, puzzleNumber, isGameComplete, language]); // Added language dep
 
   // Auto-save state whenever it changes
   useEffect(() => {
@@ -142,9 +193,10 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         gameState,
         difficulty,
         puzzleNumber,
-      });
+        language, // Save language
+      }, language);
     }
-  }, [allWords, selectedWords, foundGroups, mistakesRemaining, gameState, saveGameState, difficulty, puzzleNumber]);
+  }, [allWords, selectedWords, foundGroups, mistakesRemaining, gameState, saveGameState, difficulty, puzzleNumber, language]);
 
   // Keyboard support: Enter to Submit
   useEffect(() => {
@@ -186,7 +238,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         setGameState('won');
         setMessage(t.excellent);
         recordWin('connections');
-        markComplete('connections');
+        markComplete('connections', language);
       }
     } else {
       setMistakesRemaining(prev => prev - 1);
@@ -195,7 +247,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         setGameState('lost');
         setMessage(t.lost);
         recordLoss('connections');
-        markComplete('connections');
+        markComplete('connections', language);
       }
     }
 
@@ -277,29 +329,35 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         )}
 
         {/* Controls */}
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-3 w-full max-w-sm">
           {gameState === 'playing' ? (
             <>
-              <button
-                onClick={shuffleWords}
-                className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                {t.shuffle}
-              </button>
-              <button
-                onClick={() => setSelectedWords([])}
-                className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all cursor-pointer"
-              >
-                {t.deselect}
-              </button>
+              {/* Row 1: Helpers */}
+              <div className="flex gap-3 justify-center w-full">
+                <button
+                  onClick={shuffleWords}
+                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer"
+                >
+                  {t.shuffle}
+                </button>
+                <button
+                  onClick={() => setSelectedWords([])}
+                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-[10px] md:text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={selectedWords.length === 0}
+                >
+                  {t.deselect}
+                </button>
+              </div>
+
+              {/* Row 2: Submit Action */}
               <button
                 onClick={handleSubmit}
                 disabled={selectedWords.length !== groupSize}
                 className={`
-                  px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all
+                  w-full py-4 rounded-xl text-xs md:text-sm font-black uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer shadow-lg
                   ${selectedWords.length === groupSize
-                    ? 'bg-primary text-bg-deep shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
-                    : 'bg-white/5 text-text-muted/50 border border-white/5 cursor-not-allowed grayscale'
+                    ? 'bg-primary text-bg-deep scale-[1.02] shadow-[0_0_20px_rgba(45,201,172,0.4)] animate-pulse hover:scale-[1.04]'
+                    : 'bg-white/5 border border-white/10 text-white/30 cursor-not-allowed'
                   }
                 `}
               >
@@ -307,9 +365,9 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
               </button>
             </>
           ) : (
-            <button 
-              onClick={() => window.location.href = '/'}
-              className="px-12 py-4 bg-primary text-bg-deep rounded-2xl text-base font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full px-8 py-4 bg-primary text-bg-deep rounded-xl text-sm font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_30px_rgba(45,201,172,0.3)] cursor-pointer"
             >
               {t.playAgain}
             </button>
