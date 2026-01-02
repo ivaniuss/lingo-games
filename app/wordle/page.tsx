@@ -23,7 +23,8 @@ const TRANSLATIONS = {
     theWordWas: 'The word was',
     easy: 'Easy',
     normal: 'Normal', 
-    hard: 'Hard'
+    hard: 'Hard',
+    check: 'CHECK'
   },
   es: {
     description: 'Adivina la palabra oculta del día en {n} intentos o menos.',
@@ -38,7 +39,8 @@ const TRANSLATIONS = {
     theWordWas: 'La palabra era',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    check: 'COMPROBAR'
   },
   fr: {
     description: 'Devinez le mot caché du jour en {n} essais ou moins.',
@@ -53,7 +55,8 @@ const TRANSLATIONS = {
     theWordWas: 'Le mot était',
     easy: 'Facile',
     normal: 'Normal',
-    hard: 'Difficile'
+    hard: 'Difficile',
+    check: 'VÉRIFIER'
   },
   de: {
     description: 'Errate das versteckte Wort des Tages in {n} Versuchen oder weniger.',
@@ -68,7 +71,8 @@ const TRANSLATIONS = {
     theWordWas: 'Das Wort war',
     easy: 'Leicht',
     normal: 'Normal',
-    hard: 'Schwierig'
+    hard: 'Schwierig',
+    check: 'PRÜFEN'
   },
   it: {
     description: 'Indovina la parola nascosta del giorno in {n} tentativi o meno.',
@@ -83,7 +87,8 @@ const TRANSLATIONS = {
     theWordWas: 'La parola era',
     easy: 'Facile',
     normal: 'Normale',
-    hard: 'Difficile'
+    hard: 'Difficile',
+    check: 'CONTROLLA'
   },
   pt: {
     description: 'Adivinhe a palavra oculta do dia em {n} tentativas ou menos.',
@@ -98,7 +103,8 @@ const TRANSLATIONS = {
     theWordWas: 'A palavra era',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    check: 'VERIFICAR'
   },
   'pt-BR': {
     description: 'Adivinhe a palavra oculta do dia em {n} tentativas ou menos.',
@@ -113,7 +119,8 @@ const TRANSLATIONS = {
     theWordWas: 'A palavra era',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    check: 'VERIFICAR'
   },
   'pt-PT': {
     description: 'Adivinhe a palavra oculta do dia em {n} tentativas ou menos.',
@@ -128,7 +135,8 @@ const TRANSLATIONS = {
     theWordWas: 'A palavra era',
     easy: 'Fácil',
     normal: 'Normal',
-    hard: 'Difícil'
+    hard: 'Difícil',
+    check: 'VERIFICAR'
   }
 };
 
@@ -446,6 +454,24 @@ export default function WordlePage() {
         {/* Helper Text */}
          <div className="text-center text-[10px] md:text-xs font-black tracking-[0.3em] text-text-muted uppercase opacity-60 mt-4 md:mt-8">
           {t.helper}
+        </div>
+
+        {/* Mobile Check Button */}
+        <div className={`
+          mt-6 w-full max-w-xs transition-all duration-500 ease-out transform
+          ${currentGuess.length === (targetWord?.length || wordLength) && gameState === 'playing'
+             ? 'opacity-100 translate-y-0' 
+             : 'opacity-0 translate-y-4 pointer-events-none'}
+        `}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEnter();
+            }}
+            className="w-full py-4 rounded-xl bg-primary text-bg-deep font-black tracking-[0.2em] shadow-lg shadow-primary/25 active:scale-95 transition-all text-sm hover:bg-primary-light"
+          >
+            {t.check}
+          </button>
         </div>
         {/* Hidden input to enable mobile soft keyboard */}
         <input

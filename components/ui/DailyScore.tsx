@@ -5,14 +5,14 @@ import { useLanguage, languages } from '@/context/LanguageContext';
 import { useMemo } from 'react';
 
 const TRANSLATIONS = {
-  en: { label: 'Daily Score', max: 'Max Possible', breakdown: 'Points per Language' },
-  es: { label: 'Puntuación Diaria', max: 'Máximo Posible', breakdown: 'Puntos por Idioma' },
-  fr: { label: 'Score Quotidien', max: 'Maximum Possible', breakdown: 'Points par Langue' },
-  de: { label: 'Tägliche Punktzahl', max: 'Maximal Möglich', breakdown: 'Punkte pro Sprache' },
-  it: { label: 'Punteggio Giornaliero', max: 'Massimo Possibile', breakdown: 'Punti per Lingua' },
-  pt: { label: 'Pontuação Diária', max: 'Máximo Possível', breakdown: 'Pontos por Idioma' },
-  'pt-BR': { label: 'Pontuação Diária', max: 'Máximo Possível', breakdown: 'Pontos por Idioma' },
-  'pt-PT': { label: 'Pontuação Diária', max: 'Máximo Possível', breakdown: 'Pontos por Idioma' }
+  en: { label: 'Daily Score', max: 'Total games', all_lang_max: 'All languages max', breakdown: 'Points per Language' },
+  es: { label: 'Puntuación Diaria', max: 'Total juegos', all_lang_max: 'Máx (Todos los idiomas)', breakdown: 'Puntos por Idioma' },
+  fr: { label: 'Score Quotidien', max: 'Jeux totaux', all_lang_max: 'Max (Toutes langues)', breakdown: 'Points par Langue' },
+  de: { label: 'Tägliche Punktzahl', max: 'Spiele gesamt', all_lang_max: 'Max (Alle Sprachen)', breakdown: 'Punkte pro Sprache' },
+  it: { label: 'Punteggio Giornaliero', max: 'Giochi totali', all_lang_max: 'Max (Tutte le lingue)', breakdown: 'Punti per Lingua' },
+  pt: { label: 'Pontuação Diária', max: 'Total de jogos', all_lang_max: 'Máx (Todos idiomas)', breakdown: 'Pontos por Idioma' },
+  'pt-BR': { label: 'Pontuação Diária', max: 'Total de jogos', all_lang_max: 'Máx (Todos idiomas)', breakdown: 'Pontos por Idioma' },
+  'pt-PT': { label: 'Pontuação Diária', max: 'Total de jogos', all_lang_max: 'Máx (Todos idiomas)', breakdown: 'Pontos por Idioma' }
 };
 
 interface DailyScoreProps {
@@ -24,43 +24,59 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
   
-  const dailyScores = useGameStore((state) => state.dailyScores);
   const gameStates = useGameStore((state) => state.gameStates);
   
   // Calculate total score and max score
-  const { wins, losses, maxScore, langScores } = useMemo(() => {
-    // Basic totals from dailyScores (which aggregates all wins)
-    const totalWins = dailyScores.wordle.wins + dailyScores.connections.wins + dailyScores.grid.wins + (dailyScores.crossword?.wins || 0);
-    const totalLosses = dailyScores.wordle.losses + dailyScores.connections.losses + dailyScores.grid.losses + (dailyScores.crossword?.losses || 0);
-    
-    // Max possible score = Games * Languages
-    // We have 3 main games: Wordle, Connections, Crossword (Grid)
-    const gamesCount = 3; 
-    const maxPoss = gamesCount * languages.length;
+  const { wins, losses, maxScore, allLangMaxScore, allLangWins, allLangLosses, langScores } = useMemo(() => {
+    // Primary UX: show progress for the currently selected language
+    const baseGames = ['wordle', 'connections', 'crossword'] as const;
+    const gamesCount = baseGames.length;
 
-    // Calculate score per language
-    const scores: Record<string, number> = {};
-    languages.forEach(l => {
-      let score = 0;
-      const games = ['wordle', 'connections', 'grid', 'crossword'];
-      games.forEach(g => {
-        // Check strict key or legacy key for 'en'
+    let winsThisLang = 0;
+    let lossesThisLang = 0;
+    baseGames.forEach((g) => {
+      const key = `${g}-${language}`;
+      const state = gameStates[key] || (language === 'en' ? gameStates[g] : undefined);
+      if (state?.gameState === 'won') winsThisLang++;
+      if (state?.gameState === 'lost') lossesThisLang++;
+    });
+
+    // Optional: completionist totals across all languages
+    const allLangMax = gamesCount * languages.length;
+    let totalWinsAllLang = 0;
+    let totalLossesAllLang = 0;
+
+    languages.forEach((l) => {
+      baseGames.forEach((g) => {
         const key = `${g}-${l.code}`;
         const state = gameStates[key] || (l.code === 'en' ? gameStates[g] : undefined);
-        if (state?.gameState === 'won') {
-          score++;
-        }
+        if (state?.gameState === 'won') totalWinsAllLang++;
+        if (state?.gameState === 'lost') totalLossesAllLang++;
+      });
+    });
+
+    // Calculate score per language (for the flags breakdown)
+    const scores: Record<string, number> = {};
+    languages.forEach((l) => {
+      let score = 0;
+      baseGames.forEach((g) => {
+        const key = `${g}-${l.code}`;
+        const state = gameStates[key] || (l.code === 'en' ? gameStates[g] : undefined);
+        if (state?.gameState === 'won') score++;
       });
       if (score > 0) scores[l.code] = score;
     });
 
-    return { 
-      wins: totalWins, 
-      losses: totalLosses, 
-      maxScore: maxPoss,
-      langScores: scores
+    return {
+      wins: winsThisLang,
+      losses: lossesThisLang,
+      maxScore: gamesCount,
+      allLangMaxScore: allLangMax,
+      allLangWins: totalWinsAllLang,
+      allLangLosses: totalLossesAllLang,
+      langScores: scores,
     };
-  }, [dailyScores, gameStates]);
+  }, [gameStates, language]);
 
   if (variant === 'compact') {
     return (
@@ -114,6 +130,9 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
         <div className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">
            {t.max}: {maxScore}
         </div>
+        <div className="text-[10px] font-bold text-text-muted/40 uppercase tracking-wider">
+           {t.all_lang_max}: {allLangMaxScore}
+        </div>
       </div>
       
       <div className="flex items-center gap-3 md:gap-4 px-6 py-3 md:px-8 md:py-4 bg-glass/30 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
@@ -155,6 +174,10 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
             </svg>
           </div>
         </div>
+      </div>
+
+      <div className="text-[10px] font-bold text-text-muted/40 uppercase tracking-wider">
+        {allLangWins} / {allLangMaxScore} • {allLangLosses}
       </div>
 
       {/* Language Breakdown */}
