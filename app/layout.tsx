@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { Analytics } from "@vercel/analytics/next"
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
@@ -74,6 +75,7 @@ export default function RootLayout({
         <LanguageProvider>
           <div className="min-h-screen flex flex-col">
             {children}
+            <Analytics />
           </div>
         </LanguageProvider>
       </body>
