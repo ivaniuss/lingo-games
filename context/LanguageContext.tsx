@@ -29,15 +29,19 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const savedRaw = typeof window !== 'undefined' ? localStorage.getItem('lingo-language') : null;
+    setMounted(true);
+    const savedRaw = localStorage.getItem('lingo-language');
+    
     const migrateLegacy = (val: string | null): Language | null => {
       if (!val) return null;
       if (val === 'pt') return 'pt-BR';
       if (languages.find(l => l.code === val)) return val as Language;
       return null;
     };
+    
     const migrated = migrateLegacy(savedRaw);
     
     if (migrated) {
@@ -56,7 +60,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('lingo-language', lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lingo-language', lang);
+    }
   };
 
   return (

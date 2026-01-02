@@ -18,17 +18,12 @@ export function GameWrapper({ children, gameId }: GameWrapperProps) {
 
       {/* Game Content Container */}
       <main className="flex-1 w-full flex flex-col items-center">
-        {gameId && (
-          <div className="w-full text-center py-6 md:py-10 animate-in fade-in slide-in-from-top-4">
-            <div className="inline-block text-[10px] md:text-xs font-black tracking-[0.3em] text-primary/60 uppercase bg-primary/5 px-6 py-2 rounded-full border border-primary/10">
-              {gameId}
-            </div>
-          </div>
-        )}
-        
         <div className="flex-1 w-full max-w-7xl px-4 md:px-6 flex flex-col items-center">
           {children}
         </div>
+        
+        {/* MANDATORY SPACER TO GUARANTEE FOOTER SEPARATION */}
+        <div className="h-10 md:h-16 w-full" aria-hidden="true" />
       </main>
 
       <Footer />

@@ -13,6 +13,8 @@ interface Group {
 
 interface ConnectionsGameProps {
   groups: Group[];
+  difficulty: 'easy' | 'normal' | 'hard';
+  puzzleNumber: number;
 }
 
 const TRANSLATIONS = {
@@ -84,7 +86,7 @@ const TRANSLATIONS = {
   }
 };
 
-export function ConnectionsGame({ groups }: ConnectionsGameProps) {
+export function ConnectionsGame({ groups, difficulty, puzzleNumber }: ConnectionsGameProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
 
@@ -101,21 +103,33 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
   const [message, setMessage] = useState('');
 
+  const groupSize = groups[0]?.words.length || 4;
+
   // Load saved state on mount
   useEffect(() => {
     const savedState = getGameState('connections');
-    if (savedState && savedState.allWords && savedState.allWords.length > 0) {
-      setAllWords(savedState.allWords);
+    
+    // Check if the saved state matches the CURRENT groups (difficulty change or new day)
+    const isSamePuzzle = savedState && 
+                         savedState.puzzleNumber === puzzleNumber &&
+                         savedState.difficulty === difficulty;
+
+    if (isSamePuzzle) {
+      setAllWords(savedState.allWords || []);
       setSelectedWords(savedState.selectedWords || []);
       setFoundGroups(savedState.foundGroups || []);
       setMistakesRemaining(savedState.mistakesRemaining ?? 4);
       setGameState(savedState.gameState || 'playing');
     } else {
-      // Initialize with shuffled words
+      // Initialize with shuffled words from the new groups
       const words = groups.flatMap(g => g.words.map(w => ({ word: w, category: g.category, difficulty: g.difficulty })));
       setAllWords(words.sort(() => Math.random() - 0.5));
+      setSelectedWords([]);
+      setFoundGroups([]);
+      setMistakesRemaining(groupSize);
+      setGameState('playing');
     }
-  }, [groups, getGameState]);
+  }, [groups, getGameState, difficulty, puzzleNumber]);
 
   // Auto-save state whenever it changes
   useEffect(() => {
@@ -126,21 +140,34 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
         foundGroups,
         mistakesRemaining,
         gameState,
+        difficulty,
+        puzzleNumber,
       });
     }
-  }, [allWords, selectedWords, foundGroups, mistakesRemaining, gameState, saveGameState]);
+  }, [allWords, selectedWords, foundGroups, mistakesRemaining, gameState, saveGameState, difficulty, puzzleNumber]);
+
+  // Keyboard support: Enter to Submit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && gameState === 'playing' && selectedWords.length === groupSize) {
+        handleSubmit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState, selectedWords, groupSize]); // handleSubmit is a non-memoized function but depends on these values indirectly via state closure
 
   const toggleWord = (word: string) => {
     if (gameState !== 'playing') return;
     if (selectedWords.includes(word)) {
       setSelectedWords(selectedWords.filter(w => w !== word));
-    } else if (selectedWords.length < 4) {
+    } else if (selectedWords.length < groupSize) {
       setSelectedWords([...selectedWords, word]);
     }
   };
 
   const handleSubmit = () => {
-    if (selectedWords.length !== 4) return;
+    if (selectedWords.length !== groupSize) return;
 
     const firstWordData = allWords.find(w => w.word === selectedWords[0]);
     const isCorrect = selectedWords.every(word => {
@@ -155,9 +182,9 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
       setSelectedWords([]);
       setMessage(t.excellent);
       
-      if (foundGroups.length === 3) {
+      if (foundGroups.length === groups.length - 1) {
         setGameState('won');
-        setMessage(t.won);
+        setMessage(t.excellent);
         recordWin('connections');
         markComplete('connections');
       }
@@ -213,16 +240,19 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
 
       {/* Word Grid */}
       {gameState === 'playing' && (
-        <div className="grid grid-cols-4 gap-2 md:gap-4 w-full">
+        <div 
+          className="grid gap-2 md:gap-4 w-full"
+          style={{ gridTemplateColumns: `repeat(${groupSize}, minmax(0, 1fr))` }}
+        >
           {allWords.map((item, i) => (
             <button
               key={i}
               onClick={() => toggleWord(item.word)}
               className={`
-                h-16 md:h-24 rounded-xl flex items-center justify-center text-[10px] md:text-sm font-black uppercase tracking-tight transition-all duration-200
+                h-16 md:h-24 rounded-xl flex items-center justify-center text-[9px] md:text-sm font-black uppercase tracking-tight transition-all duration-200 text-center px-1 cursor-pointer
                 ${selectedWords.includes(item.word)
-                  ? 'bg-primary text-bg-deep scale-95'
-                  : 'bg-glass border border-white/5 hover:bg-white/10'
+                  ? 'bg-primary text-bg-deep scale-95 shadow-[0_0_20px_rgba(45,201,172,0.2)]'
+                  : 'bg-glass border border-white/5 hover:bg-white/10 hover:border-white/20 hover:-translate-y-1'
                 }
               `}
             >
@@ -237,7 +267,7 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
         {gameState === 'playing' && (
           <div className="flex items-center gap-1.5 mb-2">
             <span className="text-[10px] uppercase font-black tracking-widest text-text-muted mr-2">{t.mistakes}</span>
-            {Array.from({ length: 4 }).map((_, i) => (
+            {Array.from({ length: groupSize }).map((_, i) => (
               <div 
                 key={i} 
                 className={`w-3 h-3 rounded-full border border-white/20 ${i < mistakesRemaining ? 'bg-primary' : 'bg-transparent'}`}
@@ -252,23 +282,23 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
             <>
               <button
                 onClick={shuffleWords}
-                className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 {t.shuffle}
               </button>
               <button
                 onClick={() => setSelectedWords([])}
-                className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all"
+                className="px-6 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 hover:text-white hover:scale-105 active:scale-95 transition-all cursor-pointer"
               >
                 {t.deselect}
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={selectedWords.length !== 4}
+                disabled={selectedWords.length !== groupSize}
                 className={`
                   px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all
-                  ${selectedWords.length === 4
-                    ? 'bg-primary text-bg-deep shadow-lg hover:scale-[1.05] active:scale-95'
+                  ${selectedWords.length === groupSize
+                    ? 'bg-primary text-bg-deep shadow-lg hover:scale-105 active:scale-95 cursor-pointer'
                     : 'bg-white/5 text-text-muted/50 border border-white/5 cursor-not-allowed grayscale'
                   }
                 `}

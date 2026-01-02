@@ -3,7 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type GameType = 'wordle' | 'connections' | 'grid';
+export type GameType = 'wordle' | 'connections' | 'grid' | 'crossword';
 
 interface GameScore {
   wins: number;
@@ -32,6 +32,12 @@ interface GameState {
     gridData: string[][];
     status: 'playing' | 'validating' | 'finished';
     attemptsRemaining: number;
+    hintsRemaining?: number;
+  };
+  // Crossword state
+  crossword?: {
+    gameState: 'playing' | 'won' | 'lost';
+    userGrid: string[][];
   };
 }
 
@@ -71,11 +77,13 @@ export const useGameStore = create<GameStore>()(
         wordle: { wins: 0, losses: 0 },
         connections: { wins: 0, losses: 0 },
         grid: { wins: 0, losses: 0 },
+        crossword: { wins: 0, losses: 0 },
       },
       completedGames: {
         wordle: false,
         connections: false,
         grid: false,
+        crossword: false,
       },
       gameStates: {},
       lastPlayDate: getTodayDate(),
@@ -139,8 +147,8 @@ export const useGameStore = create<GameStore>()(
       getTotalScore: () => {
         get().checkAndResetDaily();
         const scores = get().dailyScores;
-        const totalWins = scores.wordle.wins + scores.connections.wins + scores.grid.wins;
-        const totalLosses = scores.wordle.losses + scores.connections.losses + scores.grid.losses;
+        const totalWins = scores.wordle.wins + scores.connections.wins + scores.grid.wins + (scores.crossword?.wins || 0);
+        const totalLosses = scores.wordle.losses + scores.connections.losses + scores.grid.losses + (scores.crossword?.losses || 0);
         return { wins: totalWins, losses: totalLosses };
       },
 
@@ -155,11 +163,13 @@ export const useGameStore = create<GameStore>()(
               wordle: { wins: 0, losses: 0 },
               connections: { wins: 0, losses: 0 },
               grid: { wins: 0, losses: 0 },
+              crossword: { wins: 0, losses: 0 },
             },
             completedGames: {
               wordle: false,
               connections: false,
               grid: false,
+              crossword: false,
             },
             gameStates: {},
             lastPlayDate: today,

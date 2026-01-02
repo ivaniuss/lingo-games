@@ -27,105 +27,92 @@ interface RealCrosswordProps {
 
 const TRANSLATIONS = {
   en: {
-    across: "Across",
-    down: "Down",
-    submit: "Check Answers",
-    completed: "Crossword Completed!",
-    playAgain: "Play Again",
-    incomplete: "Fill all squares first",
-    giveUp: "Give Up",
-    confirmGiveUp: "Are you sure? This will count as a loss.",
-    betterLuck: "Better luck next time!",
-    gameOver: "Game Over",
-    show_keyboard: "Show keyboard",
-    close: "Close"
+    across: 'Across',
+    down: 'Down',
+    submit: 'Check Answers',
+    completed: 'Crossword Completed!',
+    playAgain: 'Play Again',
+    incomplete: 'Fill all squares first',
+    giveUp: 'Give Up',
+    confirmGiveUp: 'Are you sure? This will count as a loss.',
+    betterLuck: 'Better luck next time!',
+    gameOver: 'Game Over', show_keyboard: "Show keyboard", close: "Close"}, show_keyboard: "{t.show_keyboard}", close: "{t.close}"}, show_keyboard: "Afficher le clavier", close: "Fermer"}, show_keyboard: "Tastatur anzeigen", close: "Schließen"}, show_keyboard: "Mostra tastiera", close: "Chiudi"}, show_keyboard: "{t.show_keyboard}", close: "Fechar"}
   },
   es: {
-    across: "Horizontal",
-    down: "Vertical",
-    submit: "Comprobar",
-    completed: "¡Crucigrama Completado!",
-    playAgain: "Jugar de nuevo",
-    incomplete: "Rellena todo primero",
-    giveUp: "Rendirse",
-    confirmGiveUp: "¿Seguro? Esto contará como derrota.",
-    betterLuck: "¡Suerte la próxima!",
-    gameOver: "Fin del Juego",
-    show_keyboard: "Mostrar teclado",
-    close: "Cerrar"
+    across: 'Horizontal',
+    down: 'Vertical',
+    submit: 'Comprobar',
+    completed: '¡Crucigrama Completado!',
+    playAgain: 'Jugar de nuevo',
+    incomplete: 'Rellena todo primero',
+    giveUp: 'Rendirse',
+    confirmGiveUp: '¿Seguro? Esto contará como derrota.',
+    betterLuck: '¡Suerte la próxima!',
+    gameOver: 'Fin del Juego', show_keyboard: "Show keyboard", close: "Close"}, show_keyboard: "{t.show_keyboard}", close: "{t.close}"}, show_keyboard: "Afficher le clavier", close: "Fermer"}, show_keyboard: "Tastatur anzeigen", close: "Schließen"}, show_keyboard: "Mostra tastiera", close: "Chiudi"}, show_keyboard: "{t.show_keyboard}", close: "Fechar"}
   },
   fr: {
-    across: "Horizontal",
-    down: "Vertical",
-    submit: "Vérifier",
-    completed: "Mots croisés terminés !",
-    playAgain: "Rejouer",
-    incomplete: "Remplissez tout d'abord",
-    giveUp: "Abandonner",
-    confirmGiveUp: "Sûr ? Cela comptera comme une défaite.",
-    betterLuck: "Plus de chance la prochaine fois !",
-    gameOver: "Jeu Terminé",
-    show_keyboard: "Afficher le clavier",
-    close: "Fermer"
+    across: 'Horizontal',
+    down: 'Vertical',
+    submit: 'Vérifier',
+    completed: 'Mots croisés terminés !',
+    playAgain: 'Rejouer',
+    incomplete: 'Remplissez tout d\'abord',
+    giveUp: 'Abandonner',
+    confirmGiveUp: 'Sûr ? Cela comptera comme une défaite.',
+    betterLuck: 'Plus de chance la prochaine fois !',
+    gameOver: 'Jeu Terminé', show_keyboard: "Show keyboard", close: "Close"}, show_keyboard: "{t.show_keyboard}", close: "{t.close}"}, show_keyboard: "Afficher le clavier", close: "Fermer"}, show_keyboard: "Tastatur anzeigen", close: "Schließen"}, show_keyboard: "Mostra tastiera", close: "Chiudi"}, show_keyboard: "{t.show_keyboard}", close: "Fechar"}
   },
   de: {
-    across: "Waagerecht",
-    down: "Senkrecht",
-    submit: "Prüfen",
-    completed: "Kreuzworträtsel gelöst!",
-    playAgain: "Erneut spielen",
-    incomplete: "Erst alles ausfüllen",
-    giveUp: "Aufgeben",
-    confirmGiveUp: "Sicher? Das zählt als Niederlage.",
-    betterLuck: "Viel Glück beim nächsten Mal!",
-    gameOver: "Spiel Vorbei",
-    show_keyboard: "Tastatur anzeigen",
-    close: "Schließen"
+    across: 'Waagerecht',
+    down: 'Senkrecht',
+    submit: 'Prüfen',
+    completed: 'Kreuzworträtsel gelöst!',
+    playAgain: 'Erneut spielen',
+    incomplete: 'Erst alles ausfüllen',
+    giveUp: 'Aufgeben',
+    confirmGiveUp: 'Sicher? Das zählt als Niederlage.',
+    betterLuck: 'Viel Glück beim nächsten Mal!',
+    gameOver: 'Spiel Vorbei', show_keyboard: "Show keyboard", close: "Close"}, show_keyboard: "{t.show_keyboard}", close: "{t.close}"}, show_keyboard: "Afficher le clavier", close: "Fermer"}, show_keyboard: "Tastatur anzeigen", close: "Schließen"}, show_keyboard: "Mostra tastiera", close: "Chiudi"}, show_keyboard: "{t.show_keyboard}", close: "Fechar"}
   },
   it: {
-    across: "Orizzontale",
-    down: "Verticale",
-    submit: "Controlla",
-    completed: "Cruciverba Completato!",
-    playAgain: "Gioca ancora",
-    incomplete: "Completa tutto prima",
-    giveUp: "Arrendersi",
-    confirmGiveUp: "Sicuro? Conterà come sconfitta.",
-    betterLuck: "Più fortuna la prossima volta!",
-    gameOver: "Game Over",
-    show_keyboard: "Mostra tastiera",
-    close: "Chiudi"
+    across: 'Orizzontale',
+    down: 'Verticale',
+    submit: 'Controlla',
+    completed: 'Cruciverba Completato!',
+    playAgain: 'Gioca ancora',
+    incomplete: 'Completa tutto prima',
+    giveUp: 'Arrendersi',
+    confirmGiveUp: 'Sicuro? Conterà come sconfitta.',
+    betterLuck: 'Più fortuna la prossima volta!',
+    gameOver: 'Game Over', show_keyboard: "Show keyboard", close: "Close"}, show_keyboard: "{t.show_keyboard}", close: "{t.close}"}, show_keyboard: "Afficher le clavier", close: "Fermer"}, show_keyboard: "Tastatur anzeigen", close: "Schließen"}, show_keyboard: "Mostra tastiera", close: "Chiudi"}, show_keyboard: "{t.show_keyboard}", close: "Fechar"}
   },
   pt: {
-    across: "Horizontal",
-    down: "Vertical",
-    submit: "Verificar",
-    completed: "Palavras Cruzadas Concluídas!",
-    playAgain: "Jogar novamente",
-    incomplete: "Preencha tudo primeiro",
-    giveUp: "Desistir",
-    confirmGiveUp: "Tem certeza? Contará como derrota.",
-    betterLuck: "Mais sorte da próxima vez!",
-    gameOver: "Fim de Jogo",
-    show_keyboard: "Mostrar teclado",
-    close: "Fechar"
+    across: 'Horizontal',
+    down: 'Vertical',
+    submit: 'Verificar',
+    completed: 'Palavras Cruzadas Concluídas!',
+    playAgain: 'Jogar novamente',
+    incomplete: 'Preencha tudo primeiro',
+    giveUp: 'Desistir',
+    confirmGiveUp: 'Tem certeza? Contará como derrota.',
+    betterLuck: 'Mais sorte da próxima vez!',
+    gameOver: 'Fim de Jogo', show_keyboard: "Show keyboard", close: "Close"}, show_keyboard: "{t.show_keyboard}", close: "{t.close}"}, show_keyboard: "Afficher le clavier", close: "Fermer"}, show_keyboard: "Tastatur anzeigen", close: "Schließen"}, show_keyboard: "Mostra tastiera", close: "Chiudi"}, show_keyboard: "{t.show_keyboard}", close: "Fechar"}
   }
-};
-const EXTRA_KEYS_BY_LANG: Record<string, string[]> = {
-  es: ['Ñ'],
-  'pt-BR': ['Ç','Ã','Õ'],
-  'pt-PT': ['Ç','Ã','Õ'],
-  fr: ['Ç','É','È','À','Ù'],
-  de: ['Ä','Ö','Ü','ß'],
-  it: ['À','È','É','Ì','Ò','Ù'],
-  en: []
 };
 
 export function RealCrossword({ grid: templateGrid, clues, width, height, maxAttempts, initialHints }: RealCrosswordProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
-  
-  const extraKeys = EXTRA_KEYS_BY_LANG[language] || [];
+  const extraKeysByLang: Record<string, string[]> = {
+    es: ['Ñ'],
+    'pt-BR': ['Ç','Ã','Õ'],
+    'pt-PT': ['Ç','Ã','Õ'],
+    fr: ['Ç','É','È','À','Ù'],
+    de: ['Ä','Ö','Ü','ß'],
+    it: ['À','È','É','Ì','Ò','Ù'],
+    en: []
+  };
+  const extraKeys = extraKeysByLang[language] || [];
   const extraKeysFiltered = (language || '').toString().startsWith('es')
     ? extraKeys.filter(k => k.toUpperCase() !== 'Ñ')
     : extraKeys;
@@ -145,6 +132,8 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
   const [errors, setErrors] = useState<Set<string>>(new Set()); // "r,c" strings
   const mobileInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Refs for input management (not used currently)
+
   const saveGameState = useGameStore((state) => state.saveGameState);
   const getGameState = useGameStore((state) => state.getGameState);
 
@@ -157,31 +146,44 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
     if (templateGrid && templateGrid.length > 0) {
       // 1. Try loading saved state
       const savedState = getGameState('grid');
+      
       if (savedState && savedState.gridData && savedState.gridData.length === height) {
-        setUserGrid(savedState.gridData as (string | null)[][]);
-        if (savedState.attemptsRemaining !== undefined) setAttempts(savedState.attemptsRemaining);
-        else setAttempts(maxAttempts);
-        if (savedState.hintsRemaining !== undefined) setHintsRemaining(savedState.hintsRemaining);
-        else setHintsRemaining(initialHints);
-        if (savedState.status === 'finished') {
-          setIsFinished(true);
-          setHasWon(savedState.attemptsRemaining !== 0);
-        }
+         // Schedule state restoration to next tick to satisfy lint rule about setState in effects
+         setTimeout(() => {
+           setUserGrid(savedState.gridData as (string | null)[][]);
+           if (savedState.attemptsRemaining !== undefined) setAttempts(savedState.attemptsRemaining);
+           else setAttempts(maxAttempts);
+           if (savedState.hintsRemaining !== undefined) setHintsRemaining(savedState.hintsRemaining);
+           else setHintsRemaining(initialHints);
+           if (savedState.status === 'finished') {
+               setIsFinished(true);
+               // If attempts == 0, it was a loss. If attempts > 0 and finished, it was a win.
+               if (savedState.attemptsRemaining === 0) setHasWon(false);
+               else setHasWon(true);
+           }
+         }, 0);
       } else {
-        const initInfo = templateGrid.map((row, r) => row.map((cell, c) => {
-          if (!cell) return null;
+         // 2. Initialize fresh if no save
+         const initInfo = templateGrid.map((row, r) => row.map((cell, c) => {
+          if (!cell) return null; // Black cell
+          // Auto-fill if it's a start cell (Hint feature)
           const isStart = clues.some(clue => clue.row === r && clue.col === c);
-          return isStart ? cell : '';
+          return isStart ? cell : ''; 
         }));
-        setUserGrid(initInfo as (string | null)[][]);
-        setAttempts(maxAttempts);
-        setHintsRemaining(initialHints);
+        // Defer state set to avoid lint complaint about setState directly in effect
+        setTimeout(() => {
+          setUserGrid(initInfo as (string | null)[][]);
+          setAttempts(maxAttempts);
+          setHintsRemaining(initialHints);
+        }, 0);
       }
       
       // Select first available cell (defer state set to next tick)
       const firstClue = clues[0];
-      if (firstClue && !selectedCell) {
-        setSelectedCell({ r: firstClue.row, c: firstClue.col });
+      if (firstClue) {
+        setTimeout(() => {
+          setSelectedCell({ r: firstClue.row, c: firstClue.col });
+        }, 0);
       }
     }
   }, [templateGrid, clues, height, getGameState, maxAttempts, initialHints]); // Added loading deps
@@ -212,6 +214,83 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
     // We check if ANY clue starts here.
     return clues.some(clue => clue.row === r && clue.col === c);
   }, [clues]);
+
+  // Navigation helpers (declared before effects to avoid TDZ issues)
+  const navigate = useCallback((dr: number, dc: number) => {
+    if (!selectedCell) return;
+    let nr = selectedCell.r + dr;
+    let nc = selectedCell.c + dc;
+    // Check bounds
+    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+      // Check if valid (not black)
+      if (userGrid[nr][nc] !== null) {
+        setSelectedCell({ r: nr, c: nc });
+      } else {
+        // skip black cell once
+        nr += dr;
+        nc += dc;
+        if (nr >= 0 && nr < height && nc >= 0 && nc < width && userGrid[nr][nc] !== null) {
+          setSelectedCell({ r: nr, c: nc });
+        }
+      }
+    }
+  }, [selectedCell, height, width, userGrid]);
+
+  const moveCursor = useCallback((step: 1 | -1) => {
+    if (!selectedCell) return;
+    let nr = selectedCell.r;
+    let nc = selectedCell.c;
+    if (direction === 'across') nc += step; else nr += step;
+    if (nr >= 0 && nr < height && nc >= 0 && nc < width && userGrid[nr][nc] !== null) {
+      setSelectedCell({ r: nr, c: nc });
+    }
+  }, [selectedCell, direction, height, width, userGrid]);
+
+  // Keep a tiny hidden input focused to show soft keyboard on mobile/tablet
+  useEffect(() => {
+    if (mobileInputRef.current) {
+      try {
+        mobileInputRef.current.focus({ preventScroll: true } as any);
+      } catch {}
+    }
+  }, [selectedCell]);
+
+  const onMobileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedCell || isFinished) return;
+    const v = e.target.value;
+    if (!v) return;
+    const ch = v.slice(-1).toUpperCase();
+    const { r, c } = selectedCell;
+    if (/^[A-ZÀ-ÿ]$/.test(ch)) {
+      const protectedCell = isProtected(r, c);
+      if (!protectedCell) {
+        const newGrid = [...userGrid];
+        newGrid[r][c] = ch;
+        setUserGrid(newGrid);
+        if (errors.has(`${r},${c}`)) {
+          const ne = new Set(errors);
+          ne.delete(`${r},${c}`);
+          setErrors(ne);
+        }
+      }
+      const currentClue = getCurrentClue(r, c, direction);
+      if (currentClue) {
+        const isAtEnd = direction === 'across'
+          ? c === currentClue.col + currentClue.length - 1
+          : r === currentClue.row + currentClue.length - 1;
+        if (!isAtEnd) moveCursor(1);
+      }
+    }
+    e.target.value = '';
+  }, [selectedCell, isFinished, isProtected, userGrid, errors, getCurrentClue, direction, moveCursor]);
+
+  const onMobileKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' || e.key === 'Enter') {
+      const ev = new KeyboardEvent('keydown', { key: e.key });
+      window.dispatchEvent(ev);
+      e.preventDefault();
+    }
+  }, []);
 
   const checkAnswers = useCallback(() => {
     // If no attempts left, do nothing (should be disabled anyway)
@@ -259,57 +338,6 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
     }
   }, [attempts, height, width, userGrid, templateGrid, recordWin, markComplete, recordLoss]);
 
-  // Navigation helpers (declared before effects to avoid TDZ issues)
-  const navigate = useCallback((dr: number, dc: number) => {
-    if (!selectedCell) return;
-    let nr = selectedCell.r + dr;
-    let nc = selectedCell.c + dc;
-    // Check bounds
-    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
-      // Check if valid (not black)
-      if (userGrid[nr][nc] !== null) {
-        setSelectedCell({ r: nr, c: nc });
-      } else {
-        // skip black cell once
-        nr += dr;
-        nc += dc;
-        if (nr >= 0 && nr < height && nc >= 0 && nc < width && userGrid[nr][nc] !== null) {
-          setSelectedCell({ r: nr, c: nc });
-        }
-      }
-    }
-  }, [selectedCell, height, width, userGrid]);
-
-  const moveCursor = useCallback((step: 1 | -1) => {
-    if (!selectedCell) return;
-    let nr = selectedCell.r;
-    let nc = selectedCell.c;
-    if (direction === 'across') nc += step; else nr += step;
-    if (nr >= 0 && nr < height && nc >= 0 && nc < width && userGrid[nr][nc] !== null) {
-      setSelectedCell({ r: nr, c: nc });
-    }
-  }, [selectedCell, direction, height, width, userGrid]);
-
-  const handleEnter = useCallback(() => {
-    if (!selectedCell || isFinished) return;
-    const { r, c } = selectedCell;
-    const isFull = userGrid.every(row => row.every(cell => cell !== ''));
-    if (isFull) {
-      checkAnswers();
-    } else {
-      const currentClue = getCurrentClue(r, c, direction);
-      if (currentClue) {
-        const currentIdx = clues.findIndex(cl => cl.number === currentClue.number && cl.direction === currentClue.direction);
-        const nextIdx = (currentIdx + 1) % clues.length;
-        const nextClue = clues[nextIdx];
-        if (nextClue) {
-          setSelectedCell({ r: nextClue.row, c: nextClue.col });
-          setDirection(nextClue.direction);
-        }
-      }
-    }
-  }, [selectedCell, isFinished, userGrid, checkAnswers, getCurrentClue, direction, clues]);
-
   const useHint = useCallback(() => {
     if (!selectedCell || isFinished || hintsRemaining <= 0) return;
     const { r, c } = selectedCell;
@@ -336,124 +364,146 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
     }
   }, [direction, getCurrentClue, isFinished, isProtected, selectedCell, templateGrid, userGrid, hintsRemaining]);
 
-  const handleType = useCallback((char: string) => {
-    if (!selectedCell || isFinished) return;
-    const { r, c } = selectedCell;
-    const val = char.toUpperCase();
-
-    if (/^[A-ZÀ-ÿ]$/.test(val)) {
-      const protectedCell = isProtected(r, c);
-      if (!protectedCell) {
-        const newGrid = [...userGrid];
-        newGrid[r][c] = val;
-        setUserGrid(newGrid);
-
-        if (errors.has(`${r},${c}`)) {
-          const newErrors = new Set(errors);
-          newErrors.delete(`${r},${c}`);
-          setErrors(newErrors);
-        }
-      }
-
-      const currentClue = getCurrentClue(r, c, direction);
-      if (currentClue) {
-        const isAtEnd = direction === 'across'
-          ? c === currentClue.col + currentClue.length - 1
-          : r === currentClue.row + currentClue.length - 1;
-        if (!isAtEnd) moveCursor(1);
-      }
-    }
-  }, [selectedCell, isFinished, isProtected, userGrid, errors, getCurrentClue, direction, moveCursor]);
-
-  const handleBackspace = useCallback(() => {
-    if (!selectedCell || isFinished) return;
-    const { r, c } = selectedCell;
-    const isEmpty = userGrid[r][c] === '';
-    const protectedCell = isProtected(r, c);
-
-    if (!isEmpty && !protectedCell) {
-      const newGrid = [...userGrid];
-      newGrid[r][c] = '';
-      setUserGrid(newGrid);
-      moveCursor(-1);
-    } else {
-      const currentClue = getCurrentClue(r, c, direction);
-      if (currentClue) {
-        const isAtStart = direction === 'across' ? c === currentClue.col : r === currentClue.row;
-        if (!isAtStart) {
-          moveCursor(-1);
-          let nr = r, nc = c;
-          if (direction === 'across') nc -= 1; else nr -= 1;
-          setTimeout(() => {
-            setUserGrid(prev => {
-              if (isProtected(nr, nc)) return prev;
-              const g = [...prev];
-              g[nr][nc] = '';
-              return g;
-            });
-          }, 0);
-        }
-      }
-    }
-  }, [selectedCell, isFinished, userGrid, isProtected, moveCursor, getCurrentClue, direction]);
-
-  // Keep a tiny hidden input focused to show soft keyboard on mobile/tablet
-  useEffect(() => {
-    if (mobileInputRef.current) {
-      try {
-        mobileInputRef.current.focus();
-      } catch {}
-    }
-  }, [selectedCell]);
-
-  const onMobileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!selectedCell || isFinished) return;
-    const v = e.target.value;
-    if (!v) return;
-    const ch = v.slice(-1).toUpperCase();
-    handleType(ch);
-    e.target.value = '';
-  }, [selectedCell, isFinished, handleType]);
-
-  const onMobileKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace') {
-      handleBackspace();
-      e.preventDefault();
-    } else if (e.key === 'Enter') {
-      handleEnter();
-      e.preventDefault();
-    }
-  }, [handleBackspace, handleEnter]);
-
   // Keyboard Navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // If the focus is on our hidden input, let the input handlers (onMobileInputChange/onMobileKeyDown)
-      // handle the event to avoid double-typing on physical keyboards.
-      if (e.target === mobileInputRef.current) return;
-
       if (!selectedCell || isFinished) return;
+      const { r, c } = selectedCell;
 
+      // Typing Letters (allow Latin letters with diacritics)
       if (/^[A-Za-zÀ-ÿ]$/.test(e.key)) {
-        handleType(e.key);
-      } else if (e.key === 'Backspace') {
-        handleBackspace();
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        handleEnter();
-      } else if (e.key === 'ArrowRight') navigate(0, 1);
+        const val = e.key.toUpperCase();
+        
+        // 1. Check if we can modify this cell
+        const protectedCell = isProtected(r, c);
+        
+        if (!protectedCell) {
+             const newGrid = [...userGrid];
+             newGrid[r][c] = val;
+             setUserGrid(newGrid);
+             
+             // Clear error if exists
+             if (errors.has(`${r},${c}`)) {
+                const newErrors = new Set(errors);
+                newErrors.delete(`${r},${c}`);
+                setErrors(newErrors);
+             }
+        }
+
+        // 2. Advance Cursor (Constrained to current word)
+        // Only advance if we are NOT at the end of the current word
+        const currentClue = getCurrentClue(r, c, direction);
+        if (currentClue) {
+           const isAtEnd = direction === 'across' 
+              ? c === currentClue.col + currentClue.length - 1
+              : r === currentClue.row + currentClue.length - 1;
+           
+           if (!isAtEnd) {
+              moveCursor(1);
+           }
+        }
+      }
+      
+      // Backspace
+      else if (e.key === 'Backspace') {
+        // Behavioral logic:
+        // If current cell is NOT empty & NOT protected -> Clear it, Don't move.
+        // If current cell IS empty -> Move back, then clear that one (if not protected).
+        // If current cell IS protected -> Move back? Or stay? usually move back.
+
+        const isEmpty = userGrid[r][c] === '';
+        const protectedCell = isProtected(r, c);
+
+        if (!isEmpty && !protectedCell) {
+           // Clear current
+           const newGrid = [...userGrid];
+           newGrid[r][c] = '';
+           setUserGrid(newGrid);
+           // Don't move? Or move back? 
+           // Standard: "Backspace deletes character to the left of the cursor" (word processor).
+           // Crossword standard varies. commonly: Delete current, move back.
+           // User Request: "Delete deletes fixed letter".
+           // Let's go with: delete current cell content, move back.
+           moveCursor(-1); 
+        } else {
+           // Empty or Protected
+           // Move back first
+           // But check we stay in word bounds!
+           const currentClue = getCurrentClue(r, c, direction);
+           if (currentClue) {
+               const isAtStart = direction === 'across'
+                  ? c === currentClue.col
+                  : r === currentClue.row;
+               
+               if (!isAtStart) {
+                   moveCursor(-1);
+                   
+                   // After moving back, check if we can delete THAT one
+                   // We need to know the NEW coordinates.
+                   let nr = r, nc = c;
+                   if (direction === 'across') nc -= 1; else nr -= 1;
+                   
+                   // Check bounds loosely (moveCursor does logic but we are predicting)
+                   // Actually we can just implement "Delete at previous" logic separately.
+                   // Simpler: Just rely on the fact that if we move back, the user can hit backspace AGAIN to delete.
+                   // BUT, standard UX is "Backspace moves back and deletes".
+                   
+                   // Let's do: Move back. Then if that cell !protected, clear it.
+                    setTimeout(() => {
+                        setUserGrid(prev => {
+                             if (isProtected(nr, nc)) return prev;
+                             const g = [...prev];
+                             g[nr][nc] = '';
+                             return g;
+                        });
+                    }, 0);
+               }
+           }
+        }
+      }
+
+      // Arrows
+      else if (e.key === 'ArrowRight') navigate(0, 1);
       else if (e.key === 'ArrowLeft') navigate(0, -1);
       else if (e.key === 'ArrowUp') navigate(-1, 0);
       else if (e.key === 'ArrowDown') navigate(1, 0);
+      
+      // Space (Toggle Direction)
       else if (e.key === ' ') {
         e.preventDefault();
         setDirection(d => d === 'across' ? 'down' : 'across');
+      }
+
+      // Enter (Submit or Next Word)
+      else if (e.key === 'Enter') {
+        e.preventDefault();
+        
+        // 1. Check if grid is full
+        const isFull = userGrid.every(row => row.every(cell => cell !== ''));
+        
+        if (isFull) {
+           checkAnswers();
+        } else {
+           // Move to next clue/word
+           // Find current clue index
+           const currentClue = getCurrentClue(r, c, direction);
+           if (currentClue) {
+              const currentIdx = clues.findIndex(cl => cl.number === currentClue.number && cl.direction === currentClue.direction);
+              const nextIdx = (currentIdx + 1) % clues.length;
+              const nextClue = clues[nextIdx];
+              
+              if (nextClue) {
+                 setSelectedCell({ r: nextClue.row, c: nextClue.col });
+                 setDirection(nextClue.direction);
+              }
+           }
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedCell, isFinished, handleType, handleBackspace, handleEnter, navigate]);
+  }, [selectedCell, userGrid, direction, isFinished, errors, getCurrentClue, isProtected, navigate, moveCursor, checkAnswers, clues]);
 
   // helpers are declared above
 
@@ -467,7 +517,7 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
       // Focus hidden input to ensure soft keyboard is visible on mobile/tablet
       setTimeout(() => {
         if (mobileInputRef.current) {
-          try { mobileInputRef.current.focus(); } catch {}
+          try { mobileInputRef.current.focus({ preventScroll: true } as any); } catch {}
         }
       }, 0);
       
@@ -739,9 +789,32 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
               extraKeys={extraKeysFiltered}
               onKey={(k) => {
                 if (isFinished) return;
-                if (k === 'Backspace') handleBackspace();
-                else if (k === 'Enter') handleEnter();
-                else handleType(k);
+                if (k === 'Backspace' || k === 'Enter') {
+                  const ev = new KeyboardEvent('keydown', { key: k });
+                  window.dispatchEvent(ev);
+                  return;
+                }
+                if (/^[A-ZÀ-ÿ]$/.test(k) && selectedCell) {
+                  const { r, c } = selectedCell;
+                  const protectedCell = isProtected(r, c);
+                  if (!protectedCell) {
+                    const newGrid = [...userGrid];
+                    newGrid[r][c] = k.toUpperCase();
+                    setUserGrid(newGrid);
+                    if (errors.has(`${r},${c}`)) {
+                      const ne = new Set(errors);
+                      ne.delete(`${r},${c}`);
+                      setErrors(ne);
+                    }
+                  }
+                  const currentClue = getCurrentClue(r, c, direction);
+                  if (currentClue) {
+                    const isAtEnd = direction === 'across'
+                      ? c === currentClue.col + currentClue.length - 1
+                      : r === currentClue.row + currentClue.length - 1;
+                    if (!isAtEnd) moveCursor(1);
+                  }
+                }
               }}
             />
             </div>
