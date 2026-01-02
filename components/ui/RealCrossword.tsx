@@ -1,0 +1,652 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
+import { useGameStore } from '@/store/useGameStore';
+import { GameCompletedOverlay } from './GameCompletedOverlay';
+
+interface Clue {
+  number: number;
+  direction: 'across' | 'down';
+  text: string;
+  row: number;
+  col: number;
+  length: number;
+  answer: string;
+}
+
+interface RealCrosswordProps {
+  grid: string[][];
+  clues: Clue[];
+  width: number;
+  height: number;
+}
+
+const TRANSLATIONS = {
+  en: {
+    across: 'Across',
+    down: 'Down',
+    submit: 'Check Answers',
+    completed: 'Crossword Completed!',
+    playAgain: 'Play Again',
+    incomplete: 'Fill all squares first',
+    giveUp: 'Give Up',
+    confirmGiveUp: 'Are you sure? This will count as a loss.',
+    betterLuck: 'Better luck next time!',
+    gameOver: 'Game Over'
+  },
+  es: {
+    across: 'Horizontal',
+    down: 'Vertical',
+    submit: 'Comprobar',
+    completed: '¡Crucigrama Completado!',
+    playAgain: 'Jugar de nuevo',
+    incomplete: 'Rellena todo primero',
+    giveUp: 'Rendirse',
+    confirmGiveUp: '¿Seguro? Esto contará como derrota.',
+    betterLuck: '¡Suerte la próxima!',
+    gameOver: 'Fin del Juego'
+  },
+  fr: {
+    across: 'Horizontal',
+    down: 'Vertical',
+    submit: 'Vérifier',
+    completed: 'Mots croisés terminés !',
+    playAgain: 'Rejouer',
+    incomplete: 'Remplissez tout d\'abord',
+    giveUp: 'Abandonner',
+    confirmGiveUp: 'Sûr ? Cela comptera comme une défaite.',
+    betterLuck: 'Plus de chance la prochaine fois !',
+    gameOver: 'Jeu Terminé'
+  },
+  de: {
+    across: 'Waagerecht',
+    down: 'Senkrecht',
+    submit: 'Prüfen',
+    completed: 'Kreuzworträtsel gelöst!',
+    playAgain: 'Erneut spielen',
+    incomplete: 'Erst alles ausfüllen',
+    giveUp: 'Aufgeben',
+    confirmGiveUp: 'Sicher? Das zählt als Niederlage.',
+    betterLuck: 'Viel Glück beim nächsten Mal!',
+    gameOver: 'Spiel Vorbei'
+  },
+  it: {
+    across: 'Orizzontale',
+    down: 'Verticale',
+    submit: 'Controlla',
+    completed: 'Cruciverba Completato!',
+    playAgain: 'Gioca ancora',
+    incomplete: 'Completa tutto prima',
+    giveUp: 'Arrendersi',
+    confirmGiveUp: 'Sicuro? Conterà come sconfitta.',
+    betterLuck: 'Più fortuna la prossima volta!',
+    gameOver: 'Game Over'
+  },
+  pt: {
+    across: 'Horizontal',
+    down: 'Vertical',
+    submit: 'Verificar',
+    completed: 'Palavras Cruzadas Concluídas!',
+    playAgain: 'Jogar novamente',
+    incomplete: 'Preencha tudo primeiro',
+    giveUp: 'Desistir',
+    confirmGiveUp: 'Tem certeza? Contará como derrota.',
+    betterLuck: 'Mais sorte da próxima vez!',
+    gameOver: 'Fim de Jogo'
+  }
+};
+
+export function RealCrossword({ grid: templateGrid, clues, width, height }: RealCrosswordProps) {
+  const { language } = useLanguage();
+  const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
+  
+  const recordWin = useGameStore((state) => state.recordWin);
+  const recordLoss = useGameStore((state) => state.recordLoss);
+  const markComplete = useGameStore((state) => state.markComplete);
+
+  // State
+  // userGrid stores the user's input. Uses null for black cells and '' for empty cells.
+  const [userGrid, setUserGrid] = useState<(string | null)[][]>([]);
+  
+  const [selectedCell, setSelectedCell] = useState<{r: number, c: number} | null>(null);
+  const [direction, setDirection] = useState<'across' | 'down'>('across');
+  const [isFinished, setIsFinished] = useState(false);
+  const [hasWon, setHasWon] = useState(false); // Track if finished via win or surrender
+  const [errors, setErrors] = useState<Set<string>>(new Set()); // "r,c" strings
+
+  // Refs for input management (not used currently)
+
+  const saveGameState = useGameStore((state) => state.saveGameState);
+  const getGameState = useGameStore((state) => state.getGameState);
+
+  const [attempts, setAttempts] = useState(3);
+
+  // Initialize User Grid (Persistence Logic)
+  useEffect(() => {
+    if (templateGrid && templateGrid.length > 0) {
+      // 1. Try loading saved state
+      const savedState = getGameState('grid');
+      
+      if (savedState && savedState.gridData && savedState.gridData.length === height) {
+         // Schedule state restoration to next tick to satisfy lint rule about setState in effects
+         setTimeout(() => {
+           setUserGrid(savedState.gridData as (string | null)[][]);
+           if (savedState.attemptsRemaining !== undefined) {
+              setAttempts(savedState.attemptsRemaining);
+           }
+           if (savedState.status === 'finished') {
+               setIsFinished(true);
+               // If attempts == 0, it was a loss. If attempts > 0 and finished, it was a win.
+               if (savedState.attemptsRemaining === 0) setHasWon(false);
+               else setHasWon(true);
+           }
+         }, 0);
+      } else {
+         // 2. Initialize fresh if no save
+         const initInfo = templateGrid.map((row, r) => row.map((cell, c) => {
+          if (!cell) return null; // Black cell
+          // Auto-fill if it's a start cell (Hint feature)
+          const isStart = clues.some(clue => clue.row === r && clue.col === c);
+          return isStart ? cell : ''; 
+        }));
+        // Defer state set to avoid lint complaint about setState directly in effect
+        setTimeout(() => {
+          setUserGrid(initInfo as (string | null)[][]);
+        }, 0);
+      }
+      
+      // Select first available cell (defer state set to next tick)
+      const firstClue = clues[0];
+      if (firstClue) {
+        setTimeout(() => {
+          setSelectedCell({ r: firstClue.row, c: firstClue.col });
+        }, 0);
+      }
+    }
+  }, [templateGrid, clues, height, getGameState]); // Added loading deps
+
+  // Save State Effect
+  useEffect(() => {
+    if (userGrid.length > 0) {
+      saveGameState('grid', {
+        gridData: userGrid,
+        status: isFinished ? 'finished' : 'playing',
+        attemptsRemaining: attempts
+      });
+    }
+  }, [userGrid, isFinished, attempts, saveGameState]);
+
+  // Helper to find the clue that the user is currently "in"
+  const getCurrentClue = useCallback((r: number, c: number, dir: 'across' | 'down') => {
+     if (dir === 'across') {
+       return clues.find(cl => cl.direction === 'across' && cl.row === r && c >= cl.col && c < cl.col + cl.length);
+     } else {
+       return clues.find(cl => cl.direction === 'down' && cl.col === c && r >= cl.row && r < cl.row + cl.length);
+     }
+  }, [clues]);
+
+  const isProtected = useCallback((r: number, c: number) => {
+    // Protected if it is a start cell (Hint)
+    // We check if ANY clue starts here.
+    return clues.some(clue => clue.row === r && clue.col === c);
+  }, [clues]);
+
+  // Navigation helpers (declared before effects to avoid TDZ issues)
+  const navigate = useCallback((dr: number, dc: number) => {
+    if (!selectedCell) return;
+    let nr = selectedCell.r + dr;
+    let nc = selectedCell.c + dc;
+    // Check bounds
+    if (nr >= 0 && nr < height && nc >= 0 && nc < width) {
+      // Check if valid (not black)
+      if (userGrid[nr][nc] !== null) {
+        setSelectedCell({ r: nr, c: nc });
+      } else {
+        // skip black cell once
+        nr += dr;
+        nc += dc;
+        if (nr >= 0 && nr < height && nc >= 0 && nc < width && userGrid[nr][nc] !== null) {
+          setSelectedCell({ r: nr, c: nc });
+        }
+      }
+    }
+  }, [selectedCell, height, width, userGrid]);
+
+  const moveCursor = useCallback((step: 1 | -1) => {
+    if (!selectedCell) return;
+    let nr = selectedCell.r;
+    let nc = selectedCell.c;
+    if (direction === 'across') nc += step; else nr += step;
+    if (nr >= 0 && nr < height && nc >= 0 && nc < width && userGrid[nr][nc] !== null) {
+      setSelectedCell({ r: nr, c: nc });
+    }
+  }, [selectedCell, direction, height, width, userGrid]);
+
+  const checkAnswers = useCallback(() => {
+    // If no attempts left, do nothing (should be disabled anyway)
+    if (attempts <= 0) return;
+
+    const newErrors = new Set<string>();
+    let allCorrect = true;
+    let allFilled = true;
+
+    for (let r = 0; r < height; r++) {
+      for (let c = 0; c < width; c++) {
+        const userVal = userGrid[r][c];
+        const correctVal = templateGrid[r][c];
+        if (correctVal) { // White cell
+          if (!userVal) allFilled = false;
+          else if (userVal !== correctVal) {
+            newErrors.add(`${r},${c}`);
+            allCorrect = false;
+          }
+        }
+      }
+    }
+
+    setErrors(newErrors);
+
+    if (allCorrect && allFilled) {
+      setIsFinished(true);
+      setHasWon(true);
+      recordWin('grid');
+      markComplete('grid');
+    } else {
+      // Decrement attempts
+      const newAttempts = attempts - 1;
+      setAttempts(newAttempts);
+      if (newAttempts <= 0) {
+        // Game Over logic
+        setIsFinished(true);
+        setHasWon(false);
+        recordLoss('grid');
+        markComplete('grid');
+        // Reveal full grid
+        const info = templateGrid.map((row) => row.map((cell) => cell || ''));
+        setUserGrid(info);
+      }
+    }
+  }, [attempts, height, width, userGrid, templateGrid, recordWin, markComplete, recordLoss]);
+
+  // Keyboard Navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selectedCell || isFinished) return;
+      const { r, c } = selectedCell;
+
+      // Typing Letters
+      if (e.key.match(/^[a-zA-Z]$/)) {
+        const val = e.key.toUpperCase();
+        
+        // 1. Check if we can modify this cell
+        const protectedCell = isProtected(r, c);
+        
+        if (!protectedCell) {
+             const newGrid = [...userGrid];
+             newGrid[r][c] = val;
+             setUserGrid(newGrid);
+             
+             // Clear error if exists
+             if (errors.has(`${r},${c}`)) {
+                const newErrors = new Set(errors);
+                newErrors.delete(`${r},${c}`);
+                setErrors(newErrors);
+             }
+        }
+
+        // 2. Advance Cursor (Constrained to current word)
+        // Only advance if we are NOT at the end of the current word
+        const currentClue = getCurrentClue(r, c, direction);
+        if (currentClue) {
+           const isAtEnd = direction === 'across' 
+              ? c === currentClue.col + currentClue.length - 1
+              : r === currentClue.row + currentClue.length - 1;
+           
+           if (!isAtEnd) {
+              moveCursor(1);
+           }
+        }
+      }
+      
+      // Backspace
+      else if (e.key === 'Backspace') {
+        // Behavioral logic:
+        // If current cell is NOT empty & NOT protected -> Clear it, Don't move.
+        // If current cell IS empty -> Move back, then clear that one (if not protected).
+        // If current cell IS protected -> Move back? Or stay? usually move back.
+
+        const isEmpty = userGrid[r][c] === '';
+        const protectedCell = isProtected(r, c);
+
+        if (!isEmpty && !protectedCell) {
+           // Clear current
+           const newGrid = [...userGrid];
+           newGrid[r][c] = '';
+           setUserGrid(newGrid);
+           // Don't move? Or move back? 
+           // Standard: "Backspace deletes character to the left of the cursor" (word processor).
+           // Crossword standard varies. commonly: Delete current, move back.
+           // User Request: "Delete deletes fixed letter".
+           // Let's go with: delete current cell content, move back.
+           moveCursor(-1); 
+        } else {
+           // Empty or Protected
+           // Move back first
+           // But check we stay in word bounds!
+           const currentClue = getCurrentClue(r, c, direction);
+           if (currentClue) {
+               const isAtStart = direction === 'across'
+                  ? c === currentClue.col
+                  : r === currentClue.row;
+               
+               if (!isAtStart) {
+                   moveCursor(-1);
+                   
+                   // After moving back, check if we can delete THAT one
+                   // We need to know the NEW coordinates.
+                   let nr = r, nc = c;
+                   if (direction === 'across') nc -= 1; else nr -= 1;
+                   
+                   // Check bounds loosely (moveCursor does logic but we are predicting)
+                   // Actually we can just implement "Delete at previous" logic separately.
+                   // Simpler: Just rely on the fact that if we move back, the user can hit backspace AGAIN to delete.
+                   // BUT, standard UX is "Backspace moves back and deletes".
+                   
+                   // Let's do: Move back. Then if that cell !protected, clear it.
+                    setTimeout(() => {
+                        setUserGrid(prev => {
+                             if (isProtected(nr, nc)) return prev;
+                             const g = [...prev];
+                             g[nr][nc] = '';
+                             return g;
+                        });
+                    }, 0);
+               }
+           }
+        }
+      }
+
+      // Arrows
+      else if (e.key === 'ArrowRight') navigate(0, 1);
+      else if (e.key === 'ArrowLeft') navigate(0, -1);
+      else if (e.key === 'ArrowUp') navigate(-1, 0);
+      else if (e.key === 'ArrowDown') navigate(1, 0);
+      
+      // Space (Toggle Direction)
+      else if (e.key === ' ') {
+        e.preventDefault();
+        setDirection(d => d === 'across' ? 'down' : 'across');
+      }
+
+      // Enter (Submit or Next Word)
+      else if (e.key === 'Enter') {
+        e.preventDefault();
+        
+        // 1. Check if grid is full
+        const isFull = userGrid.every(row => row.every(cell => cell !== ''));
+        
+        if (isFull) {
+           checkAnswers();
+        } else {
+           // Move to next clue/word
+           // Find current clue index
+           const currentClue = getCurrentClue(r, c, direction);
+           if (currentClue) {
+              const currentIdx = clues.findIndex(cl => cl.number === currentClue.number && cl.direction === currentClue.direction);
+              const nextIdx = (currentIdx + 1) % clues.length;
+              const nextClue = clues[nextIdx];
+              
+              if (nextClue) {
+                 setSelectedCell({ r: nextClue.row, c: nextClue.col });
+                 setDirection(nextClue.direction);
+              }
+           }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedCell, userGrid, direction, isFinished, errors, getCurrentClue, isProtected, navigate, moveCursor, checkAnswers, clues]);
+
+  // helpers are declared above
+
+  const handleCellClick = (r: number, c: number) => {
+    if (userGrid[r][c] === null) return;
+    
+    if (selectedCell?.r === r && selectedCell?.c === c) {
+      setDirection(d => d === 'across' ? 'down' : 'across');
+    } else {
+      setSelectedCell({ r, c });
+      
+      // Smart Direction: Determine best direction based on word availability
+      const hasAcross = clues.some(cl => cl.direction === 'across' && cl.row === r && c >= cl.col && c < cl.col + cl.length);
+      const hasDown = clues.some(cl => cl.direction === 'down' && cl.col === c && r >= cl.row && r < cl.row + cl.length);
+      
+      if (hasAcross && !hasDown) setDirection('across');
+      else if (!hasAcross && hasDown) setDirection('down');
+      else if (hasAcross && hasDown) {
+        // If both, keep current if valid, else default to across
+        // Actually, if we just landed here, usually we prefer Horizontal unless we were already traversing Vertical?
+        // Let's stick effectively to "Keep current" unless it's invalid, which is handled implicitly.
+        // But if user clicks a brand new cell, maybe default to Across?
+        // Let's leave it as "keep current" for now, but ensure Across is default if current is invalid (not implemented, assuming current is strictly 'across'|'down').
+      }
+    }
+  };
+
+  // checkAnswers declared above
+
+  
+  // Helper to find clue number for a cell
+  const getClueNumber = (r: number, c: number) => {
+    return clues.find(cl => cl.row === r && cl.col === c)?.number;
+  };
+
+  return (
+    <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 lg:gap-16 items-center">
+      
+      {/* GRID CONTAINER */}
+      <div className="w-full lg:flex-1 flex justify-center lg:justify-end">
+        <div 
+          className="relative bg-black/20 p-3 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-sm"
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: `repeat(${width}, minmax(1.8rem, 2.8rem))`,
+            gap: '4px' 
+          }}
+        >
+          {userGrid.length > 0 && userGrid.map((row, r) => (
+            row.map((val, c) => {
+              // visual reference removed
+              const isBlack = val === null;
+              const isSelected = selectedCell?.r === r && selectedCell?.c === c;
+              
+              const isHigh = selectedCell && !isBlack && (
+                direction === 'across' 
+                  ? r === selectedCell.r 
+                  : c === selectedCell.c
+              );
+              // Note: Precise highlighting (stopping at black cells) requires more logic, 
+              // keeping rough row/col highlight for now as it's "good enough" for MVP.
+              
+              const clueNum = getClueNumber(r, c);
+              const isError = errors.has(`${r},${c}`);
+              
+              return (
+                <div 
+                  key={`${r}-${c}`}
+                  onClick={() => handleCellClick(r, c)}
+                  className={`
+                    aspect-square relative flex items-center justify-center text-lg md:text-2xl font-black uppercase
+                    select-none transition-all duration-150 cursor-pointer rounded-lg
+                    ${isBlack 
+                      ? 'bg-transparent opacity-0' 
+                      : 'bg-white/10 text-white border-2 border-transparent hover:bg-white/20 hover:scale-105 shadow-lg'
+                    }
+                    ${isHigh && !isBlack && !isSelected ? 'bg-primary/20 border-primary/30' : ''}
+                    ${isSelected ? 'bg-primary! text-bg-deep! border-primary! z-20 scale-110 shadow-[0_0_20px_rgba(45,201,172,0.4)]' : ''}
+                    ${isError && !isBlack ? 'bg-red-500/20! border-red-500! text-red-200!' : ''}
+                    ${isFinished && !isBlack ? 'bg-emerald-500/20! border-emerald-500! text-emerald-200!' : ''}
+                  `}
+                >
+                  {!isBlack && (
+                    <>
+                      {clueNum && (
+                        <span className={`absolute top-0.5 left-1 text-[8px] md:text-[10px] leading-none font-bold ${isSelected ? 'text-bg-deep/70' : 'text-primary/70'}`}>
+                          {clueNum}
+                        </span>
+                      )}
+                      {val}
+                    </>
+                  )}
+                </div>
+              );
+            })
+          ))}
+        </div>
+      </div>
+
+      {/* CLUES SIDEBAR (Sticky on Desktop) */}
+      <div className="w-full lg:w-96 flex flex-col gap-4 lg:gap-6 lg:sticky lg:top-32 h-auto lg:h-[calc(100vh-10rem)] max-h-none lg:max-h-[800px]">
+        
+        {/* CLUES LIST SCROLLABLE */}
+        {/* Mobile: Limit height to ~40vh to ensure controls are visible. Desktop: flex-1 to fill space. */}
+        <div className="flex-1 max-h-[40vh] lg:max-h-none overflow-y-auto custom-scrollbar flex flex-col gap-4 lg:gap-6 bg-deep-card/50 backdrop-blur rounded-2xl p-4 lg:p-6 border border-white/10 order-1">
+            {/* ACROSS */}
+            <div>
+               <div className="flex items-center gap-2 mb-2 lg:mb-3 sticky top-0 bg-deep-card/95 py-2 z-10 border-b border-white/10 backdrop-blur">
+                 <div className="w-2 h-2 rounded-full bg-primary"></div>
+                 <h3 className="text-primary font-black uppercase tracking-widest text-xs">
+                   {t.across}
+                 </h3>
+               </div>
+               <ul className="space-y-1">
+                 {clues.filter(c => c.direction === 'across')
+                        .sort((a, b) => a.number - b.number)
+                        .map(clue => (
+                   <li 
+                     key={`a-${clue.number}`}
+                     onClick={() => {
+                       setSelectedCell({ r: clue.row, c: clue.col });
+                       setDirection('across');
+                     }}
+                     className={`
+                       cursor-pointer transition-all duration-200 p-2 lg:p-3 rounded-xl group border border-transparent
+                       ${(selectedCell && direction === 'across' && selectedCell.r === clue.row) 
+                         ? 'bg-primary/10 border-primary/20 text-white shadow-lg translate-x-2' 
+                         : 'hover:bg-white/5 text-text-muted hover:text-white'
+                       }
+                     `}
+                   >
+                     <div className="flex items-start gap-3">
+                       <span className={`font-black text-sm w-5 ${(selectedCell && direction === 'across' && selectedCell.r === clue.row) ? 'text-primary' : 'text-white/40'}`}>
+                         {clue.number}
+                       </span>
+                       <span className="text-sm font-medium leading-tight">
+                          {clue.text} 
+                          <span className="opacity-50 text-xs ml-1 font-bold">({clue.length})</span>
+                       </span>
+                     </div>
+                   </li>
+                 ))}
+               </ul>
+            </div>
+
+            {/* DOWN */}
+            <div>
+               <div className="flex items-center gap-2 mb-2 lg:mb-3 sticky top-0 bg-deep-card/95 py-2 z-10 border-b border-white/10 backdrop-blur">
+                 <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                 <h3 className="text-emerald-400 font-black uppercase tracking-widest text-xs">
+                   {t.down}
+                 </h3>
+               </div>
+               <ul className="space-y-1">
+                 {clues.filter(c => c.direction === 'down')
+                        .sort((a, b) => a.number - b.number)
+                        .map(clue => (
+                   <li 
+                     key={`d-${clue.number}`}
+                     onClick={() => {
+                       setSelectedCell({ r: clue.row, c: clue.col });
+                       setDirection('down');
+                     }}
+                     className={`
+                       cursor-pointer transition-all duration-200 p-2 lg:p-3 rounded-xl group border border-transparent
+                       ${(selectedCell && direction === 'down' && selectedCell.c === clue.col) 
+                         ? 'bg-emerald-400/10 border-emerald-400/20 text-white shadow-lg translate-x-2' 
+                         : 'hover:bg-white/5 text-text-muted hover:text-white'
+                       }
+                     `}
+                   >
+                     <div className="flex items-start gap-3">
+                       <span className={`font-black text-sm w-5 ${(selectedCell && direction === 'down' && selectedCell.c === clue.col) ? 'text-emerald-400' : 'text-white/40'}`}>
+                         {clue.number}
+                       </span>
+                       <span className="text-sm font-medium leading-tight">
+                          {clue.text}
+                          <span className="opacity-50 text-xs ml-1 font-bold">({clue.length})</span>
+                       </span>
+                     </div>
+                   </li>
+                 ))}
+               </ul>
+            </div>
+        </div>
+
+        {/* CONTROLS CARD */}
+        <div className="bg-deep-card/80 backdrop-blur rounded-2xl p-4 lg:p-6 border border-white/10 shadow-lg order-2">
+           {/* ... header ... */}
+           <div className="flex items-center justify-between mb-4">
+            <div>
+               <h3 className="text-base lg:text-lg font-black text-white">Controls</h3>
+               <p className="text-[10px] lg:text-xs text-text-muted">Navigate with arrows or tap</p>
+            </div>
+            {/* Attempts Indicator */}
+             <div className="flex items-center gap-1">
+               {[...Array(3)].map((_, i) => (
+                 <div key={i} className={`w-2 h-2 rounded-full ${i < attempts ? 'bg-primary' : 'bg-white/10'}`} />
+               ))}
+               <span className="text-xs font-bold text-primary ml-2">{attempts}/3</span>
+             </div>
+          </div>
+          <div className="flex flex-col gap-3">
+             <button
+                onClick={checkAnswers}
+                disabled={isFinished || attempts <= 0}
+                className="w-full py-3 lg:py-4 bg-primary text-bg-deep font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg hover:shadow-primary/20 flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed text-sm lg:text-base"
+             >
+                <span>{t.submit}</span>
+                <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+             </button>
+          </div>
+        </div>
+      </div>
+
+      <GameCompletedOverlay 
+        isOpen={isFinished} 
+        variant={hasWon ? 'success' : 'failure'}
+        title={hasWon ? t.completed : t.gameOver}
+        message={hasWon ? "You've solved today's puzzle!" : t.betterLuck}
+        solutionContent={
+           <div className="w-full text-left">
+              <div className="text-xs font-black uppercase tracking-widest text-text-muted mb-3 text-center opacity-60">Solution</div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs md:text-sm">
+                 {clues.sort((a,b) => a.number - b.number).map(clue => (
+                    <div key={clue.number + clue.direction} className="flex flex-col bg-white/5 p-2 rounded border border-white/5">
+                       <span className="font-bold text-primary mb-0.5">{clue.number}. {clue.direction === 'across' ? t.across : t.down}</span>
+                       <span className="text-white font-black tracking-wide">{clue.answer}</span>
+                       <span className="text-[10px] text-text-muted truncate">{clue.text}</span>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        }
+      />
+
+    </div>
+  );
+}

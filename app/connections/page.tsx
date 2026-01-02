@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { GameWrapper } from '@/components/layout/GameWrapper';
 import { ConnectionsGame } from '@/components/ui/ConnectionsGame';
+import { useGameStore } from '@/store/useGameStore';
 
 const TRANSLATIONS = {
   en: {
@@ -54,6 +55,7 @@ export default function ConnectionsPage() {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
 
+  const isGameComplete = useGameStore((state) => state.isGameComplete('connections'));
   const [gameData, setGameData] = useState<{ groups: any[], number: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -93,6 +95,7 @@ export default function ConnectionsPage() {
 
   return (
     <GameWrapper title="Connections" gameId={`Connections #${gameData.number}`}>
+      
       <div className="flex flex-col items-center justify-center flex-1 w-full py-12">
         <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4">
           <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">{t.title}</h2>

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
+import { useGameStore } from '@/store/useGameStore';
+import { GameCompletedOverlay } from './GameCompletedOverlay';
 
 interface Group {
   category: string;
@@ -86,6 +88,12 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
 
+  const saveGameState = useGameStore((state) => state.saveGameState);
+  const getGameState = useGameStore((state) => state.getGameState);
+  const recordWin = useGameStore((state) => state.recordWin);
+  const recordLoss = useGameStore((state) => state.recordLoss);
+  const markComplete = useGameStore((state) => state.markComplete);
+
   const [allWords, setAllWords] = useState<{ word: string; category: string; difficulty: number }[]>([]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [foundGroups, setFoundGroups] = useState<Group[]>([]);
@@ -93,11 +101,34 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
   const [message, setMessage] = useState('');
 
+  // Load saved state on mount
   useEffect(() => {
-    // Shuffle all words
-    const words = groups.flatMap(g => g.words.map(w => ({ word: w, category: g.category, difficulty: g.difficulty })));
-    setAllWords(words.sort(() => Math.random() - 0.5));
-  }, [groups]);
+    const savedState = getGameState('connections');
+    if (savedState && savedState.allWords && savedState.allWords.length > 0) {
+      setAllWords(savedState.allWords);
+      setSelectedWords(savedState.selectedWords || []);
+      setFoundGroups(savedState.foundGroups || []);
+      setMistakesRemaining(savedState.mistakesRemaining ?? 4);
+      setGameState(savedState.gameState || 'playing');
+    } else {
+      // Initialize with shuffled words
+      const words = groups.flatMap(g => g.words.map(w => ({ word: w, category: g.category, difficulty: g.difficulty })));
+      setAllWords(words.sort(() => Math.random() - 0.5));
+    }
+  }, [groups, getGameState]);
+
+  // Auto-save state whenever it changes
+  useEffect(() => {
+    if (allWords.length > 0) {
+      saveGameState('connections', {
+        allWords,
+        selectedWords,
+        foundGroups,
+        mistakesRemaining,
+        gameState,
+      });
+    }
+  }, [allWords, selectedWords, foundGroups, mistakesRemaining, gameState, saveGameState]);
 
   const toggleWord = (word: string) => {
     if (gameState !== 'playing') return;
@@ -127,6 +158,8 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
       if (foundGroups.length === 3) {
         setGameState('won');
         setMessage(t.won);
+        recordWin('connections');
+        markComplete('connections');
       }
     } else {
       setMistakesRemaining(prev => prev - 1);
@@ -134,6 +167,8 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
       if (mistakesRemaining <= 1) {
         setGameState('lost');
         setMessage(t.lost);
+        recordLoss('connections');
+        markComplete('connections');
       }
     }
 
@@ -243,7 +278,7 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
             </>
           ) : (
             <button 
-              onClick={() => window.location.reload()}
+              onClick={() => window.location.href = '/'}
               className="px-12 py-4 bg-primary text-bg-deep rounded-2xl text-base font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl"
             >
               {t.playAgain}
@@ -251,6 +286,27 @@ export function ConnectionsGame({ groups }: ConnectionsGameProps) {
           )}
         </div>
       </div>
+      {/* Standardized Completion Overlay */}
+      <GameCompletedOverlay 
+        isOpen={gameState !== 'playing'}
+        variant={gameState === 'won' ? 'success' : 'failure'}
+        title={gameState === 'won' ? t.won : t.lost}
+        message={gameState === 'won' ? t.won : t.lost}
+        solutionContent={
+           <div className="w-full flex flex-col gap-2">
+             <div className="text-xs font-black uppercase tracking-widest text-text-muted mb-1 opacity-60">Correct Groups</div>
+             {groups.map((group, i) => (
+               <div 
+                 key={i} 
+                 className={`w-full py-2 rounded-lg text-center font-bold uppercase tracking-wide text-[10px] md:text-xs ${getDifficultyColor(group.difficulty)}`}
+               >
+                 <div className="opacity-80">{group.category}</div>
+                 <div className="text-[8px] md:text-[10px] mt-0.5 opacity-70 leading-tight">{group.words.join(', ')}</div>
+               </div>
+             ))}
+           </div>
+        }
+      />
     </div>
   );
 }

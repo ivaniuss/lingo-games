@@ -1,19 +1,16 @@
 import { NextResponse, NextRequest } from 'next/server';
-
-const WORDS_BY_LANG: Record<string, string[]> = {
-  es: ['LENGUA', 'IDIOMA', 'FRASE', 'HABLAR', 'LEER', 'NATIVO', 'PALABR', 'CULTUR', 'FLUIDO', 'ESTUDI', 'ACENTO', 'GLOSAR'],
-  en: ['TONGUE', 'PHRASE', 'NATIVE', 'FLUENT', 'ACCENT', 'SPEECH', 'WRITER', 'READER', 'LISTEN', 'SCHOOL', 'LETTER', 'WORDS'],
-  fr: ['LANGUE', 'PHRASE', 'PARLER', 'LIRE', 'NATIF', 'MOTS', 'CULTURE', 'FLUIDE', 'ETUDES', 'ACCENT', 'ECOLE', 'LETTRE'],
-  de: ['SPRACH', 'PHRASE', 'REDEN', 'LESEN', 'MUTTER', 'WORTE', 'KULTUR', 'FLIESS', 'STUDIE', 'AKZENT', 'SCHULE', 'BRIEF'],
-  it: ['LINGUA', 'FRASE', 'PARLARE', 'LEGGERE', 'NATIVO', 'PAROLA', 'STORIA', 'FLUIDO', 'STUDIO', 'ACCENTO', 'SCUOLA', 'LETTER'],
-  pt: ['LINGUA', 'FRASO', 'FALAR', 'LER', 'NATIVO', 'PALAVR', 'CULTUR', 'FLUIDO', 'ESTUDO', 'ACENTO', 'ESCOLA', 'CARTA']
-};
+import { WORDS_BY_LANG } from '@/lib/word-data';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const lang = searchParams.get('lang') || 'en';
   
+  // Fallback to English if language not found, or empty array
   const words = WORDS_BY_LANG[lang] || WORDS_BY_LANG['en'];
+
+  if (!words || words.length === 0) {
+    return NextResponse.json({ error: 'Language not supported or empty dictionary' }, { status: 400 });
+  }
 
   // Use UTC date to ensure all users see the same word at the same time
   const now = new Date();
@@ -27,7 +24,7 @@ export async function GET(request: NextRequest) {
   
   const index = Math.abs(hash) % words.length;
   const word = words[index];
-  const puzzleNumber = Math.floor(now.getTime() / (1000 * 60 * 60 * 24)) - 20000; // Arbitrary offset
+  const puzzleNumber = Math.floor(now.getTime() / (1000 * 60 * 60 * 24)) - 19720; // Adjusted offset for realism
 
   return NextResponse.json({
     word,

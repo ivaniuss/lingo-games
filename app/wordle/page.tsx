@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { GameWrapper } from '@/components/layout/GameWrapper';
+import { useGameStore } from '@/store/useGameStore';
+import { GameCompletedOverlay } from '@/components/ui/GameCompletedOverlay';
 
 const WORD_LENGTH = 6;
 const MAX_GUESSES = 6;
@@ -62,24 +64,65 @@ export default function WordlePage() {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
   
+  const isGameComplete = useGameStore((state) => state.isGameComplete('wordle'));
+  const saveGameState = useGameStore((state) => state.saveGameState);
+  const getGameState = useGameStore((state) => state.getGameState);
+  const recordWin = useGameStore((state) => state.recordWin);
+  const recordLoss = useGameStore((state) => state.recordLoss);
+  const markComplete = useGameStore((state) => state.markComplete);
+  
   const [targetWord, setTargetWord] = useState('');
   const [puzzleNumber, setPuzzleNumber] = useState(0);
   const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
 
+  // Load saved state on mount
+  useEffect(() => {
+    const savedState = getGameState('wordle');
+    if (savedState && savedState.targetWord) {
+      setGuesses(savedState.guesses || []);
+      setCurrentGuess(savedState.currentGuess || '');
+      setGameState(savedState.gameState || 'playing');
+      setTargetWord(savedState.targetWord);
+      setPuzzleNumber(savedState.puzzleNumber || 0);
+    }
+  }, [getGameState]);
+
+  // Fetch word when language changes or on first load
   useEffect(() => {
     fetch(`/api/daily-word?lang=${language}`)
       .then(res => res.json())
       .then(data => {
-        setTargetWord(data.word);
-        setPuzzleNumber(data.number);
-        // Reset game on language change
-        setGuesses([]);
-        setCurrentGuess('');
-        setGameState('playing');
+        const savedState = getGameState('wordle');
+        
+        // Only reset if the puzzle number changed (new day) or no saved state
+        if (!savedState || savedState.puzzleNumber !== data.number) {
+          setTargetWord(data.word);
+          setPuzzleNumber(data.number);
+          setGuesses([]);
+          setCurrentGuess('');
+          setGameState('playing');
+        } else {
+          // Same puzzle, just update the word for the new language
+          setTargetWord(data.word);
+          setPuzzleNumber(data.number);
+        }
       });
-  }, [language]);
+  }, [language, getGameState]);
+
+  // Auto-save state whenever it changes
+  useEffect(() => {
+    if (targetWord) {
+      saveGameState('wordle', {
+        guesses,
+        currentGuess,
+        gameState,
+        targetWord,
+        puzzleNumber,
+      });
+    }
+  }, [guesses, currentGuess, gameState, targetWord, puzzleNumber, saveGameState]);
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (gameState !== 'playing' || !targetWord) return;
@@ -93,15 +136,19 @@ export default function WordlePage() {
 
       if (currentGuess.toUpperCase() === targetWord) {
         setGameState('won');
+        recordWin('wordle');
+        markComplete('wordle');
       } else if (newGuesses.length >= MAX_GUESSES) {
         setGameState('lost');
+        recordLoss('wordle');
+        markComplete('wordle');
       }
     } else if (e.key === 'Backspace') {
       setCurrentGuess(prev => prev.slice(0, -1));
     } else if (/^[a-zA-Z]$/.test(e.key) && currentGuess.length < targetWord.length) {
       setCurrentGuess(prev => prev + e.key.toUpperCase());
     }
-  }, [currentGuess, guesses, gameState, targetWord]);
+  }, [currentGuess, guesses, gameState, targetWord, recordWin, recordLoss, markComplete]);
 
   useEffect(() => {
     window.addEventListener('keydown', onKeyDown);
@@ -117,6 +164,22 @@ export default function WordlePage() {
 
   return (
     <GameWrapper title="LingoWordle" gameId={`LingoWordle #${puzzleNumber}`}>
+      {/* Unified Overlay Handling */}
+      <GameCompletedOverlay 
+        isOpen={gameState !== 'playing'}
+        variant={gameState === 'won' ? 'success' : 'failure'}
+        title={gameState === 'won' ? t.won : t.lost}
+        message={gameState === 'won' ? t.won_msg : t.lost_msg('')} // Clean message for lost state as word is shown below
+        solutionContent={
+          <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
+             <div className="text-xs font-black uppercase tracking-widest text-text-muted">The word was</div>
+             <div className="text-3xl md:text-5xl font-black tracking-widest text-primary drop-shadow-[0_0_15px_rgba(45,201,172,0.5)]">
+               {targetWord}
+             </div>
+          </div>
+        }
+      />
+      
       {/* Game Board Container - Vertically Centered */}
       <div className="flex flex-col items-center justify-center flex-1 w-full -mt-10 md:mt-0">
         
@@ -159,28 +222,6 @@ export default function WordlePage() {
           {t.helper}
         </div>
       </div>
-
-      {/* Game Results Overlay */}
-      {gameState !== 'playing' && (
-        <div className="fixed inset-0 bg-bg-deep/90 backdrop-blur-xl flex items-center justify-center z-50 animate-in fade-in duration-500 px-6">
-          <div className="glass-panel p-8 md:p-16 text-center max-w-sm w-full glow-primary border-primary/20 shadow-[0_0_50px_rgba(45,201,172,0.1)]">
-            <h2 className="text-3xl md:text-4xl font-black mb-4 md:mb-6 tracking-tight">
-              {gameState === 'won' ? t.won : t.lost}
-            </h2>
-            <p className="text-text-muted text-base md:text-lg mb-8 md:mb-10 leading-relaxed">
-              {gameState === 'won' 
-                ? t.won_msg 
-                : t.lost_msg(targetWord)}
-            </p>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-4 md:py-5 bg-primary text-bg-deep text-lg font-black rounded-xl md:rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-lg"
-            >
-              {t.next}
-            </button>
-          </div>
-        </div>
-      )}
     </GameWrapper>
   );
 }
