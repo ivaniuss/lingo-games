@@ -110,9 +110,6 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
     };
   }, [gameStates, language]);
 
-  const completed = wins + losses;
-  const allLangCompleted = allLangWins + allLangLosses;
-
   if (variant === 'compact') {
     return (
       <div className={`flex items-center gap-3 px-3 py-1.5 bg-white/5 rounded-full border border-white/5 shadow-sm hover:bg-white/10 transition-colors ${className}`}>
@@ -170,49 +167,71 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
         </div>
       </div>
       
-      <div className="flex items-center gap-3 md:gap-4 px-6 py-3 md:px-8 md:py-4 bg-glass/30 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
-        {/* Wins */}
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
-            <svg 
-              className="w-3 h-3 md:w-4 md:h-4 text-primary" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
-              strokeWidth={3}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+      <div className="flex flex-col items-center gap-3 w-full">
+        {/* Main Score Display */}
+        <div className="flex items-center justify-center gap-4 w-full px-6 py-3 md:px-8 md:py-4 bg-glass/30 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
+          {/* Wins */}
+          <div className="flex flex-col items-center">
+            <div className="text-xs font-medium text-text-muted/70 mb-1">Wins</div>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
+                <svg 
+                  className="w-4 h-4 text-primary" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth={3}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="text-2xl font-black text-primary">
+                {wins}
+              </span>
+            </div>
           </div>
-          <span className="text-xl md:text-2xl font-black text-primary tabular-nums">
-            {completed} <span className="text-sm text-primary/40 font-bold">/ {maxScore}</span>
-          </span>
+
+          <div className="h-10 w-px bg-white/10"></div>
+
+          {/* Losses */}
+          <div className="flex flex-col items-center">
+            <div className="text-xs font-medium text-text-muted/70 mb-1">Losses</div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-black text-red-500">
+                {losses}
+              </span>
+              <div className="w-6 h-6 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
+                <svg 
+                  className="w-4 h-4 text-red-500" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth={3}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Separator */}
-        <div className="text-xl md:text-2xl font-black text-text-muted/30">-</div>
-
-        {/* Losses */}
-        <div className="flex items-center gap-2">
-          <span className="text-xl md:text-2xl font-black text-red-500 tabular-nums">
-            {losses}
-          </span>
-          <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-            <svg 
-              className="w-3 h-3 md:w-4 md:h-4 text-red-500" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
-              strokeWidth={3}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+        {/* Progress Bar */}
+        <div className="w-full max-w-xs">
+          <div className="flex justify-between text-xs text-text-muted/60 mb-1">
+            <span>Progress</span>
+            <span>{wins} of {maxScore} games</span>
+          </div>
+          <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+            <div 
+              className="bg-primary h-full rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${(wins / maxScore) * 100}%` }}
+            ></div>
           </div>
         </div>
       </div>
 
       <div className="text-[10px] font-bold text-text-muted/40 uppercase tracking-wider">
-        {allLangCompleted} / {allLangMaxScore} • {allLangLosses}
+        {allLangWins} / {allLangMaxScore} • {allLangLosses}
       </div>
 
       {/* Language Breakdown */}

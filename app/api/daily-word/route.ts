@@ -7,13 +7,15 @@ export async function GET(request: NextRequest) {
   const difficultyParam = (searchParams.get('difficulty') || 'normal').toLowerCase();
   const difficulty = (['easy', 'normal', 'hard'].includes(difficultyParam) ? difficultyParam : 'normal') as 'easy' | 'normal' | 'hard';
   
-  const words = WORDS_BY_LANG[lang] || WORDS_BY_LANG['en'];
+  // Get words for the selected language and difficulty
+  const langWords = WORDS_BY_LANG[lang] || WORDS_BY_LANG['en'];
+  const words = langWords[difficulty] || [];
 
   if (!words || words.length === 0) {
-    return NextResponse.json({ error: 'Language not supported or empty dictionary' }, { status: 400 });
+    return NextResponse.json({ error: 'No words available for the selected language and difficulty' }, { status: 400 });
   }
 
-  // Pure Wordle Settings: One word only!
+  // Wordle Settings
   const settings = {
     easy: { wordLength: 4, maxGuesses: 6 },
     normal: { wordLength: 6, maxGuesses: 6 },
@@ -22,18 +24,22 @@ export async function GET(request: NextRequest) {
   
   const config = settings[difficulty];
   
-  // Filter words by exact length
+  // Filter words by exact length (should already be filtered, but just in case)
   let filteredWords = words.filter(word => word.length === config.wordLength);
   let actualWordLength: number = config.wordLength;
 
+  // Fallback to any available words if none match the expected length
   if (filteredWords.length === 0) {
-    filteredWords = words.filter(word => word.length === 6);
-    actualWordLength = 6;
+    // Try to get words of any length from the same difficulty
+    filteredWords = words;
+    actualWordLength = words[0]?.length || 0;
   }
 
+  // Final fallback to any available words from any difficulty
   if (filteredWords.length === 0) {
-    filteredWords = [words[0]];
-    actualWordLength = words[0].length;
+    const allWords = Object.values(langWords).flat();
+    filteredWords = allWords.length > 0 ? [allWords[0]] : ['WORD'];
+    actualWordLength = filteredWords[0].length;
   }
   
   const now = new Date();
