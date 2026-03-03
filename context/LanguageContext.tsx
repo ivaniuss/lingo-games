@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Language, languages } from '@/lib/languages';
+import { StreakManager } from '@/lib/streaks';
 
 interface LanguageContextType {
   language: Language;
@@ -70,6 +71,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       }
     }
   }, [searchParams, isValidLang, setLanguageState]);
+
+  useEffect(() => {
+    StreakManager.validateStreak();
+  }, []);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>

@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { Share2, Check, Copy } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import { trackEvent } from '@/lib/analytics';
 
 interface ShareResultsProps {
     gameType: 'wordle' | 'connections' | 'crossword';
@@ -80,6 +81,14 @@ export function ShareResults({ gameType, difficulty, puzzleNumber, data }: Share
         }
 
         resultText += `\n\nPlay at: https://lingogames.app?lang=${language}`;
+
+        // Analytics
+        trackEvent('share_clicked', {
+            gameId: gameType,
+            difficulty,
+            puzzleNumber,
+            platform: typeof navigator !== 'undefined' && (navigator as any).share ? 'native' : 'clipboard'
+        });
 
         try {
             if (navigator.share) {

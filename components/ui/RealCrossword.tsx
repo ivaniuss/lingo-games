@@ -62,6 +62,8 @@ import { SoftKeyboard } from '@/components/ui/SoftKeyboard';
 import { useGameStore } from '@/store/useGameStore';
 import { GameCompletedOverlay } from './GameCompletedOverlay';
 import { CROSSWORD_TRANSLATIONS } from '@/lib/translations/crossword';
+import { trackGameOutcome } from '@/lib/analytics';
+import { StreakManager } from '@/lib/streaks';
 
 interface Clue {
   number: number;
@@ -215,6 +217,13 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
       setHasWon(true);
       recordWin('grid');
       markComplete('grid', language);
+      StreakManager.recordPlay();
+
+      // Analytics
+      trackGameOutcome('crossword', 'won', {
+        language,
+        attempts: maxAttempts - attempts + 1
+      });
     } else {
       // Decrement attempts
       const newAttempts = attempts - 1;
@@ -225,12 +234,24 @@ export function RealCrossword({ grid: templateGrid, clues, width, height, maxAtt
         setHasWon(false);
         recordLoss('grid');
         markComplete('grid', language);
+
+        // Analytics
+        trackGameOutcome('crossword', 'lost', {
+          language,
+          attempts: maxAttempts
+        });
+
         // Reveal full grid
         const info = templateGrid.map((row) => row.map((cell) => cell || ''));
         setUserGrid(info);
       }
     }
-  }, [attempts, height, width, userGrid, templateGrid, recordWin, markComplete, recordLoss, language]);
+  }, [attempts, height, width, userGrid, templateGrid, recordWin, markComplete, recordLoss, language, maxAttempts]);
+
+  // Track Game Start
+  useEffect(() => {
+    trackGameOutcome('crossword', 'start', { language });
+  }, []);
 
   // Navigation helpers (declared before effects to avoid TDZ issues)
   const navigate = useCallback((dr: number, dc: number) => {

@@ -5,6 +5,8 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useGameStore } from '@/store/useGameStore';
 import { GameCompletedOverlay } from './GameCompletedOverlay';
 import { languages } from '@/lib/languages';
+import { trackGameOutcome } from '@/lib/analytics';
+import { StreakManager } from '@/lib/streaks';
 
 interface Group {
   category: string;
@@ -112,6 +114,10 @@ const TRANSLATIONS = {
 export function ConnectionsGame({ groups, difficulty, puzzleNumber }: ConnectionsGameProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
+
+  useEffect(() => {
+    trackGameOutcome('connections', 'start', { language, difficulty });
+  }, []); // Only once on mount
 
   const saveGameState = useGameStore((state) => state.saveGameState);
   const getGameState = useGameStore((state) => state.getGameState);
@@ -231,6 +237,14 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         setMessage(t.excellent);
         recordWin('connections');
         markComplete('connections', language);
+        StreakManager.recordPlay();
+
+        // Analytics
+        trackGameOutcome('connections', 'won', {
+          language,
+          difficulty,
+          attempts: 4 - mistakesRemaining
+        });
       }
     } else {
       setMistakesRemaining(prev => prev - 1);
@@ -240,6 +254,13 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         setMessage(t.lost);
         recordLoss('connections');
         markComplete('connections', language);
+
+        // Analytics
+        trackGameOutcome('connections', 'lost', {
+          language,
+          difficulty,
+          attempts: 4
+        });
       }
     }
 

@@ -10,6 +10,7 @@ import { X, ArrowLeft, Clock } from 'lucide-react';
 import { ShareResults } from './ShareResults';
 
 import { Language } from '@/lib/languages';
+import { StreakManager, StreakData } from '@/lib/streaks';
 
 const TRANSLATIONS: Record<Language | 'pt', {
   won: string;
@@ -138,6 +139,13 @@ export function GameCompletedOverlay({
 }: GameCompletedOverlayProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
+  const [streak, setStreak] = useState<StreakData | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setStreak(StreakManager.getStreak());
+    }
+  }, [isOpen]);
   const [timeUntilMidnight, setTimeUntilMidnight] = useState('');
 
   useEffect(() => {
@@ -214,19 +222,28 @@ export function GameCompletedOverlay({
           {/* Message and Solution */}
           <div className="mb-6">
             {/* Only show the default message if there's no custom solution content */}
-            {!solutionContent && (
-              <p className="text-gray-600 dark:text-gray-300 text-center">
-                {message || t.message}
+            {message && (
+              <p className="text-sm md:text-base text-text-muted leading-relaxed max-w-sm">
+                {message}
               </p>
             )}
 
-            {/* Render the solution content if provided */}
-            {solutionContent && (
-              <div className="mt-4">
-                {solutionContent}
+            {/* Streak Bonus Hook */}
+            {streak && streak.currentStreak > 0 && (
+              <div className="flex flex-col items-center gap-1 mt-2 animate-bounce-slow">
+                <div className="flex items-center gap-2 px-6 py-3 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400">
+                  <span className="text-2xl">🔥</span>
+                  <span className="text-xl font-black">{streak.currentStreak} DAY STREAK!</span>
+                </div>
               </div>
             )}
           </div>
+          {/* Render the solution content if provided */}
+          {solutionContent && (
+            <div className="mt-4">
+              {solutionContent}
+            </div>
+          )}
 
           {/* Countdown */}
           <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 mb-6">

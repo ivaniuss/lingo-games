@@ -7,36 +7,39 @@ import React, { useState, useEffect } from 'react';
 import { DailyScore } from '@/components/ui/DailyScore';
 import { usePathname } from 'next/navigation';
 import { SOCIAL_CONFIG } from '@/lib/social-config';
+import { StreakManager, StreakData } from '@/lib/streaks';
 
 export function Header() {
   const { language } = useLanguage();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [streak, setStreak] = useState<StreakData | null>(null);
 
   useEffect(() => {
     setMounted(true);
+    setStreak(StreakManager.getStreak());
   }, []);
 
   const isHomePage = pathname === '/';
   const currentLang = languages.find(l => l.code === language);
 
   return (
-    <header className="fixed top-0 left-0 w-full h-24 md:h-32 z-50 bg-bg-deep/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
+    <header className="fixed top-0 left-0 w-full h-16 md:h-24 lg:h-32 z-50 bg-bg-deep/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
 
       {/* Layer 1: Logo Absolute Center (Viewport Relative) */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <div className="pointer-events-auto">
           <Link href="/" className="group flex flex-col items-center">
-            <h2 className="text-xl md:text-3xl font-black italic tracking-tighter transition-all group-hover:scale-110 whitespace-nowrap animate-shimmer">
+            <h2 className="text-lg md:text-3xl font-black italic tracking-tighter transition-all group-hover:scale-110 whitespace-nowrap animate-shimmer">
               <span className="text-white">LINGO</span><span className="text-primary group-hover:drop-shadow-[0_0_8px_rgba(45,201,172,0.8)] transition-all">GAMES</span>
             </h2>
-            <div className="h-1 w-full bg-gradient-to-r from-transparent via-primary to-transparent rounded-full mt-1 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-500"></div>
+            <div className="h-0.5 md:h-1 w-full bg-gradient-to-r from-transparent via-primary to-transparent rounded-full mt-0.5 md:mt-1 scale-x-0 group-hover:scale-x-100 transition-transform origin-center duration-500"></div>
           </Link>
         </div>
       </div>
 
       {/* Layer 2: Controls Container (Full Width) */}
-      <div className="relative w-full h-full px-4 md:px-12 lg:px-16 flex items-center justify-between pointer-events-none z-10">
+      <div className="relative w-full h-full px-3 md:px-12 lg:px-16 flex items-center justify-between pointer-events-none z-10">
 
         {/* Left section - Compact Daily Score */}
         <div className="flex justify-start items-center pointer-events-auto">
@@ -74,6 +77,13 @@ export function Header() {
               <svg className="w-3.5 h-3.5 md:w-5 md:h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
             </a>
           </div>
+
+          {(mounted && streak && streak.currentStreak > 0) ? (
+            <div className="flex items-center gap-1.5 px-3 py-2 md:px-4 md:py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 animate-pulse">
+              <span className="text-lg md:text-xl">🔥</span>
+              <span className="text-sm md:text-base font-black">{streak.currentStreak}</span>
+            </div>
+          ) : null}
 
           <div className="w-px h-5 md:h-6 bg-white/10"></div>
 

@@ -55,23 +55,23 @@ export default function Home() {
       <Header />
 
       {/* Spacer Estandarizado */}
-      <div className="h-24 md:h-32 lg:h-40" />
+      <div className="h-16 md:h-24 lg:h-32" />
 
       <main className="flex-1 flex flex-col items-center gap-y-12 md:gap-y-16 lg:gap-y-20">
 
         {/* Hero Section */}
         <section className="w-full max-w-7xl mx-auto px-4 md:px-6 animate-in fade-in slide-in-from-bottom-8">
-          <div className="flex flex-col items-center text-center py-4 md:py-6 space-y-4 md:space-y-6">
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
+          <div className="flex flex-col items-center text-center py-2 md:py-6 space-y-4 md:space-y-6">
+            <h1 className="text-2xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-tight">
               {t.heroTitle} <span className="text-gradient">{t.heroSubtitle}</span>
             </h1>
 
             {/* Prominent Language Selector in Hero */}
-            <div className="flex flex-col items-center gap-6 mt-8 animate-in fade-in slide-in-from-bottom-4 delay-200">
-              <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/70">
+            <div className="flex flex-col items-center gap-4 md:gap-6 mt-4 md:mt-8 animate-in fade-in slide-in-from-bottom-4 delay-200">
+              <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-primary/70">
                 {t.getStarted}
               </span>
-              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+              <div className="grid grid-cols-4 xs:grid-cols-4 sm:flex sm:flex-wrap justify-center gap-2 md:gap-4">
                 {['es', 'en', 'fr', 'pt-BR', 'pt-PT', 'it', 'de'].map((langCode) => {
                   const lang = languages.find(l => l.code === langCode);
                   if (!lang) return null;
@@ -81,8 +81,8 @@ export default function Home() {
                       key={lang.code}
                       onClick={() => setLanguage(lang.code)}
                       className={`
-                        flex items-center gap-3 px-5 py-3 md:px-7 md:py-4 rounded-2xl transition-all duration-500
-                        font-bold text-sm md:text-base border shadow-xl relative overflow-hidden cursor-pointer
+                        flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-3 p-2 sm:px-7 sm:py-4 rounded-xl sm:rounded-2xl transition-all duration-500
+                        font-bold text-[10px] sm:text-base border shadow-xl relative overflow-hidden cursor-pointer
                         ${isActive
                           ? 'bg-primary text-bg-deep border-primary shadow-primary/30 scale-105 animate-pulse-glow z-10'
                           : 'bg-white/5 text-white/70 border-white/5 hover:bg-white/10 hover:border-white/20 hover:text-white hover:scale-105 active:scale-95'
@@ -92,8 +92,9 @@ export default function Home() {
                       {isActive ? (
                         <div className="absolute inset-0 bg-white/20 animate-pulse mix-blend-overlay"></div>
                       ) : null}
-                      <span className="text-2xl filter drop-shadow-md">{lang.flag}</span>
-                      <span className="uppercase tracking-wider">{lang.name}</span>
+                      <span className="text-xl sm:text-2xl filter drop-shadow-md">{lang.flag}</span>
+                      <span className="uppercase tracking-wider hidden sm:inline">{lang.name}</span>
+                      <span className="uppercase tracking-wider sm:hidden text-[8px]">{lang.code.split('-')[0]}</span>
                     </button>
                   );
                 })}

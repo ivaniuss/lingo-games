@@ -6,6 +6,8 @@ import { GameHeader } from '@/components/layout/GameHeader';
 import { GameWrapper } from '@/components/layout/GameWrapper';
 import { useGameStore } from '@/store/useGameStore';
 import { GameCompletedOverlay } from '@/components/ui/GameCompletedOverlay';
+import { trackGameOutcome } from '@/lib/analytics';
+import { StreakManager } from '@/lib/streaks';
 
 const GAME_TITLE = 'Wordle';
 
@@ -303,14 +305,25 @@ export default function WordlePage() {
     if (nextGameState !== 'playing') {
       setGameState(nextGameState);
 
+      // Analytics for game outcome
+      trackGameOutcome('wordle', nextGameState, {
+        language,
+        difficulty,
+        attempts: newGuesses.length
+      });
+
       // 3. Side effects (Outside of updaters!)
       if (nextGameState === 'won') {
         recordWin('wordle');
         markComplete('wordle', language);
+        StreakManager.recordPlay();
       } else {
         recordLoss('wordle');
         markComplete('wordle', language);
       }
+    } else if (newGuesses.length === 1) {
+      // First guess = Game Start
+      trackGameOutcome('wordle', 'start', { language, difficulty });
     }
   }, [currentGuess, guesses, gameState, targetWord, maxGuesses, recordWin, markComplete, recordLoss, language]);
 
