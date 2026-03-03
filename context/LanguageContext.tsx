@@ -1,24 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-
-export type Language = 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt-BR' | 'pt-PT';
-
-interface LanguageOption {
-  code: Language;
-  name: string;
-  flag: string;
-}
-
-export const languages: LanguageOption[] = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'it', name: 'Italiano', flag: '🇮🇹' },
-  { code: 'pt-BR', name: 'Português (Brasil)', flag: '🇧🇷' },
-  { code: 'pt-PT', name: 'Português (Portugal)', flag: '🇵🇹' },
-];
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Language, languages } from '@/lib/languages';
 
 interface LanguageContextType {
   language: Language;
@@ -28,42 +12,64 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [language, setLanguageState] = useState<Language>('en');
-  const [mounted, setMounted] = useState(false);
+
+  // Helper to check if a code is valid
+  const isValidLang = useCallback((code: string | null): code is Language => {
+    if (!code) return false;
+    if (code === 'pt') return false; // Legacy check handled elsewhere
+    return languages.some(l => l.code === code);
+  }, []);
+
+  // Set language and update URL/Storage
+  const setLanguage = useCallback((lang: Language) => {
+    setLanguageState(lang);
+
+    // Update Storage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lingo-language', lang);
+    }
+
+    // Update URL without a full reload
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('lang', lang);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
-    setMounted(true);
+    const langParam = searchParams.get('lang');
     const savedRaw = localStorage.getItem('lingo-language');
-    
+
     const migrateLegacy = (val: string | null): Language | null => {
       if (!val) return null;
       if (val === 'pt') return 'pt-BR';
       if (languages.find(l => l.code === val)) return val as Language;
       return null;
     };
-    
-    const migrated = migrateLegacy(savedRaw);
-    
-    if (migrated) {
-      setLanguageState(migrated);
-    } else if (typeof navigator !== 'undefined' && navigator.language) {
-      const lower = navigator.language.toLowerCase();
-      if (lower.startsWith('pt')) {
-        setLanguageState(lower.includes('br') ? 'pt-BR' : 'pt-PT');
-      } else {
-        const map2: Record<string, Language> = { en: 'en', es: 'es', fr: 'fr', de: 'de', it: 'it' };
-        const two = lower.slice(0, 2);
-        if (map2[two]) setLanguageState(map2[two]);
+
+    // Priority: 1. URL Param, 2. LocalStorage, 3. Browser Navigator
+    if (isValidLang(langParam)) {
+      setLanguageState(langParam as Language);
+    } else {
+      const migrated = migrateLegacy(savedRaw);
+      if (migrated) {
+        setLanguageState(migrated);
+      } else if (typeof navigator !== 'undefined' && navigator.language) {
+        const lower = navigator.language.toLowerCase();
+        if (lower.startsWith('pt')) {
+          setLanguageState(lower.includes('br') ? 'pt-BR' : 'pt-PT');
+        } else {
+          const map2: Record<string, Language> = { en: 'en', es: 'es', fr: 'fr', de: 'de', it: 'it' };
+          const two = lower.slice(0, 2);
+          if (map2[two]) setLanguageState(map2[two]);
+        }
       }
     }
-  }, []);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lingo-language', lang);
-    }
-  };
+  }, [searchParams, isValidLang, setLanguageState]);
 
   return (
     <LanguageContext.Provider value={{ language, setLanguage }}>

@@ -22,7 +22,7 @@ const TRANSLATIONS = {
     close: 'Close',
     theWordWas: 'The word was',
     easy: 'Easy',
-    normal: 'Normal', 
+    normal: 'Normal',
     hard: 'Hard',
     check: 'CHECK'
   },
@@ -145,25 +145,25 @@ export default function WordlePage() {
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
   const extraKeysByLang: Record<string, string[]> = {
     es: ['Ñ'],
-    'pt-BR': ['Ç','Ã','Õ'],
-    'pt-PT': ['Ç','Ã','Õ'],
-    fr: ['Ç','É','È','À','Ù'],
-    de: ['Ä','Ö','Ü','ß'],
-    it: ['À','È','É','Ì','Ò','Ù'],
+    'pt-BR': ['Ç', 'Ã', 'Õ'],
+    'pt-PT': ['Ç', 'Ã', 'Õ'],
+    fr: ['Ç', 'É', 'È', 'À', 'Ù'],
+    de: ['Ä', 'Ö', 'Ü', 'ß'],
+    it: ['À', 'È', 'É', 'Ì', 'Ò', 'Ù'],
     en: []
   };
   const extraKeys = extraKeysByLang[language] || [];
   const extraKeysFiltered = (language || '').toString().startsWith('es')
     ? extraKeys.filter(k => k.toUpperCase() !== 'Ñ')
     : extraKeys;
-  
+
   const saveGameState = useGameStore((state) => state.saveGameState);
   const getGameState = useGameStore((state) => state.getGameState);
   const recordWin = useGameStore((state) => state.recordWin);
   const recordLoss = useGameStore((state) => state.recordLoss);
   const markComplete = useGameStore((state) => state.markComplete);
   const isGameComplete = useGameStore((state) => state.isGameComplete);
-  
+
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
   const [targetWords, setTargetWords] = useState<string[]>([]);
   const [wordLength, setWordLength] = useState(6);
@@ -173,7 +173,7 @@ export default function WordlePage() {
   const [currentGuess, setCurrentGuess] = useState('');
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
   const mobileInputRef = useRef<HTMLInputElement | null>(null);
-  
+
   // Reset game when difficulty changes
   const handleDifficultyChange = (newDifficulty: 'easy' | 'normal' | 'hard') => {
     setDifficulty(newDifficulty);
@@ -183,7 +183,7 @@ export default function WordlePage() {
     setTargetWords([]);
     setMaxGuesses(6); // Reset to default, will be updated by API response
   };
-  
+
   // Get the current target word (for compatibility with existing logic)
   const targetWord = targetWords[0] || '';
 
@@ -193,17 +193,17 @@ export default function WordlePage() {
       .then(res => res.json())
       .then(data => {
         const savedState = getGameState('wordle', language);
-        
+
         // Conditions to restore progress:
         // 1. Saved state exists
         // 2. It's the same day (puzzleNumber)
         // 3. It's the same difficulty
         // 4. It matches the current language
-        
-        const isSameGame = savedState && 
-                          savedState.puzzleNumber === data.number && 
-                          savedState.difficulty === difficulty &&
-                          savedState.language === language; // Validate language
+
+        const isSameGame = savedState &&
+          savedState.puzzleNumber === data.number &&
+          savedState.difficulty === difficulty &&
+          savedState.language === language; // Validate language
 
         // Check if game is already marked as complete for today in THIS language
         const alreadyCompleted = isGameComplete('wordle', language);
@@ -281,14 +281,14 @@ export default function WordlePage() {
   const handleEnter = useCallback(() => {
     if (gameState !== 'playing' || !targetWord) return;
     if (currentGuess.length !== targetWord.length) return;
-    
+
     const val = currentGuess.toUpperCase();
     const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
     const normalizedGuess = normalize(val);
     const normalizedTarget = normalize(targetWord);
 
     const newGuesses = [...guesses, val];
-    
+
     // 1. Logic for game state
     let nextGameState: 'playing' | 'won' | 'lost' = 'playing';
     if (normalizedGuess === normalizedTarget) {
@@ -302,7 +302,7 @@ export default function WordlePage() {
     setCurrentGuess('');
     if (nextGameState !== 'playing') {
       setGameState(nextGameState);
-      
+
       // 3. Side effects (Outside of updaters!)
       if (nextGameState === 'won') {
         recordWin('wordle');
@@ -316,7 +316,7 @@ export default function WordlePage() {
 
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     if (gameState !== 'playing' || !targetWord) return;
-    
+
     // If the focus is on our hidden input, let the input handlers (onMobileChange/onMobileKeyDown)
     // handle the event to avoid double-typing on physical keyboards.
     if (e.target === mobileInputRef.current) return;
@@ -340,7 +340,7 @@ export default function WordlePage() {
     if (mobileInputRef.current) {
       try {
         mobileInputRef.current.focus();
-      } catch {}
+      } catch { }
     }
   }, [gameState, targetWord]);
 
@@ -373,7 +373,7 @@ export default function WordlePage() {
 
   return (
     <GameWrapper title={GAME_TITLE} gameId="">
-      <GameHeader 
+      <GameHeader
         title={GAME_TITLE}
         description={t.description.replace('{n}', maxGuesses.toString())}
         puzzleNumber={puzzleNumber}
@@ -390,45 +390,54 @@ export default function WordlePage() {
       <div className="h-10 md:h-12" />
 
       {/* Unified Overlay Handling */}
-      <GameCompletedOverlay 
+      <GameCompletedOverlay
         isOpen={gameState !== 'playing'}
         variant={gameState === 'won' ? 'success' : 'failure'}
         title={gameState === 'won' ? t.won : t.lost}
         message={gameState === 'won' ? t.won_msg : t.lost_msg(targetWord)}
+        shareProps={{
+          gameType: 'wordle',
+          difficulty,
+          puzzleNumber,
+          data: {
+            guesses,
+            targetWord,
+            maxGuesses
+          }
+        }}
         solutionContent={
           <div className="flex flex-col items-center gap-2 p-4 bg-white/5 rounded-xl border border-white/10">
-             <div className="text-xs font-black uppercase tracking-widest text-text-muted">{t.theWordWas}</div>
-             <div className="text-3xl md:text-5xl font-black tracking-widest text-primary drop-shadow-[0_0_15px_rgba(45,201,172,0.5)]">
-               {targetWord}
-             </div>
+            <div className="text-xs font-black uppercase tracking-widest text-text-muted">{t.theWordWas}</div>
+            <div className="text-3xl md:text-5xl font-black tracking-widest text-primary drop-shadow-[0_0_15px_rgba(45,201,172,0.5)]">
+              {targetWord}
+            </div>
           </div>
         }
       />
-      
+
       {/* Game Board Container - Vertically Centered */}
       <div
         className="flex flex-col items-center justify-center flex-1 w-full mb-16 md:mb-24"
         onClick={() => {
           if (mobileInputRef.current) {
-            try { mobileInputRef.current.focus(); } catch {}
+            try { mobileInputRef.current.focus(); } catch { }
           }
         }}
       >
-        
+
         {/* Game Board */}
-        <div className={`grid gap-2 md:gap-3 mb-12 md:mb-16 animate-in zoom-in-95 duration-500 p-4 rounded-3xl bg-glass/10 backdrop-blur-sm border border-white/5 shadow-2xl transition-all ${
-          gameState !== 'playing' ? 'pointer-events-none opacity-50 grayscale contrast-125' : ''
-        }`}>
+        <div className={`grid gap-2 md:gap-3 mb-12 md:mb-16 animate-in zoom-in-95 duration-500 p-4 rounded-3xl bg-glass/10 backdrop-blur-sm border border-white/5 shadow-2xl transition-all ${gameState !== 'playing' ? 'pointer-events-none opacity-50 grayscale contrast-125' : ''
+          }`}>
           {Array.from({ length: maxGuesses }).map((_, rowIndex) => {
             const guess = guesses[rowIndex];
             const isCurrentRow = rowIndex === guesses.length;
-            
+
             return (
               <div key={rowIndex} className="flex gap-2 md:gap-3">
                 {Array.from({ length: targetWord.length || wordLength }).map((_, colIndex) => {
                   let char = '';
                   let statusClass = 'border-glass-border bg-glass';
-                  
+
                   if (guess) {
                     char = guess[colIndex];
                     statusClass = getLetterClass(guess, colIndex);
@@ -438,8 +447,8 @@ export default function WordlePage() {
                   }
 
                   return (
-                    <div 
-                      key={colIndex} 
+                    <div
+                      key={colIndex}
                       className={`w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 border-2 rounded-xl flex items-center justify-center text-xl sm:text-3xl font-black transition-all duration-300 select-none ${statusClass}`}
                     >
                       {char}
@@ -450,9 +459,9 @@ export default function WordlePage() {
             );
           })}
         </div>
-      
+
         {/* Helper Text */}
-         <div className="text-center text-[10px] md:text-xs font-black tracking-[0.3em] text-text-muted uppercase opacity-60 mt-4 md:mt-8">
+        <div className="text-center text-[10px] md:text-xs font-black tracking-[0.3em] text-text-muted uppercase opacity-60 mt-4 md:mt-8">
           {t.helper}
         </div>
 
@@ -460,8 +469,8 @@ export default function WordlePage() {
         <div className={`
           mt-6 w-full max-w-xs transition-all duration-500 ease-out transform
           ${currentGuess.length === (targetWord?.length || wordLength) && gameState === 'playing'
-             ? 'opacity-100 translate-y-0' 
-             : 'opacity-0 translate-y-4 pointer-events-none'}
+            ? 'opacity-100 translate-y-0'
+            : 'opacity-0 translate-y-4 pointer-events-none'}
         `}>
           <button
             onClick={(e) => {

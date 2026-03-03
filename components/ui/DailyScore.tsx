@@ -1,7 +1,8 @@
 'use client';
 
 import { useGameStore } from '@/store/useGameStore';
-import { useLanguage, languages } from '@/context/LanguageContext';
+import { useLanguage } from '@/context/LanguageContext';
+import { languages } from '@/lib/languages';
 import { useMemo } from 'react';
 
 const TRANSLATIONS = {
@@ -23,9 +24,9 @@ interface DailyScoreProps {
 export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
-  
+
   const gameStates = useGameStore((state) => state.gameStates);
-  
+
   // Calculate total score and max score
   const { wins, losses, maxScore, allLangMaxScore, allLangWins, allLangLosses, langScores } = useMemo(() => {
     // Primary UX: show progress for the currently selected language
@@ -116,11 +117,11 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
         {/* Wins */}
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded-full bg-primary/20 border border-primary flex items-center justify-center">
-            <svg 
-              className="w-2.5 h-2.5 text-primary" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
+            <svg
+              className="w-2.5 h-2.5 text-primary"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
               strokeWidth={3}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -128,19 +129,19 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
           </div>
           <span className="text-xs font-black text-primary tabular-nums">{wins}</span>
         </div>
-        
+
         {/* Separator */}
         <div className="w-px h-3 bg-white/10"></div>
-        
+
         {/* Losses */}
         <div className="flex items-center gap-1.5">
           <span className="text-xs font-black text-red-500 tabular-nums">{losses}</span>
           <div className="w-4 h-4 rounded-full bg-red-500/20 border border-red-500 flex items-center justify-center">
-            <svg 
-              className="w-2.5 h-2.5 text-red-500" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor" 
+            <svg
+              className="w-2.5 h-2.5 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
               strokeWidth={3}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -157,16 +158,16 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
         <div className="text-[10px] md:text-xs font-black tracking-[0.3em] uppercase text-text-muted/60">
           {t.label}
         </div>
-        
+
         {/* Max Score Helper */}
         <div className="text-[10px] font-bold text-primary/40 uppercase tracking-wider">
-           {t.max}: {maxScore}
+          {t.max}: {maxScore}
         </div>
         <div className="text-[10px] font-bold text-text-muted/40 uppercase tracking-wider">
-           {t.all_lang_max}: {allLangMaxScore}
+          {t.all_lang_max}: {allLangMaxScore}
         </div>
       </div>
-      
+
       <div className="flex flex-col items-center gap-3 w-full">
         {/* Main Score Display */}
         <div className="flex items-center justify-center gap-4 w-full px-6 py-3 md:px-8 md:py-4 bg-glass/30 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
@@ -175,11 +176,11 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
             <div className="text-xs font-medium text-text-muted/70 mb-1">Wins</div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center">
-                <svg 
-                  className="w-4 h-4 text-primary" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-4 h-4 text-primary"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                   strokeWidth={3}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -201,11 +202,11 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
                 {losses}
               </span>
               <div className="w-6 h-6 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-                <svg 
-                  className="w-4 h-4 text-red-500" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor" 
+                <svg
+                  className="w-4 h-4 text-red-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                   strokeWidth={3}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -222,7 +223,7 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
             <span>{wins} of {maxScore} games</span>
           </div>
           <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-            <div 
+            <div
               className="bg-primary h-full rounded-full transition-all duration-500 ease-out"
               style={{ width: `${(wins / maxScore) * 100}%` }}
             ></div>
@@ -236,18 +237,18 @@ export function DailyScore({ variant = 'full', className = '' }: DailyScoreProps
 
       {/* Language Breakdown */}
       {Object.keys(langScores).length > 0 && (
-         <div className="flex gap-2 flex-wrap justify-center max-w-md animate-in fade-in slide-in-from-bottom-2">
-            {Object.entries(langScores).map(([code, score]) => {
-              const lang = languages.find(l => l.code === code);
-              if (!lang) return null;
-              return (
-                <div key={code} className="px-2 py-1 bg-white/5 rounded-lg border border-white/5 flex items-center gap-2">
-                   <span className="text-lg filter drop-shadow">{lang.flag}</span>
-                   <span className="text-xs font-bold text-white/80 tabular-nums">+{score}</span>
-                </div>
-              );
-            })}
-         </div>
+        <div className="flex gap-2 flex-wrap justify-center max-w-md animate-in fade-in slide-in-from-bottom-2">
+          {Object.entries(langScores).map(([code, score]) => {
+            const lang = languages.find(l => l.code === code);
+            if (!lang) return null;
+            return (
+              <div key={code} className="px-2 py-1 bg-white/5 rounded-lg border border-white/5 flex items-center gap-2">
+                <span className="text-lg filter drop-shadow">{lang.flag}</span>
+                <span className="text-xs font-bold text-white/80 tabular-nums">+{score}</span>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

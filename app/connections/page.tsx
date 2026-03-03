@@ -17,7 +17,7 @@ const TRANSLATIONS = {
     loading: 'Loading...',
     error: "Failed to load today's challenge. Please try again later.",
     easy: 'Easy',
-    normal: 'Normal', 
+    normal: 'Normal',
     hard: 'Hard',
     won: 'EXCELLENT!',
     won_msg: 'You have found all the groups!',
@@ -132,7 +132,7 @@ export default function ConnectionsPage() {
   const isGameComplete = useGameStore((state) => state.isGameComplete('connections', language));
   // Retrieve saved state to know if won/lost
   const savedState = useGameStore((state) => state.gameStates[language ? `connections-${language}` : 'connections']);
-  
+
   const [gameData, setGameData] = useState<{ groups: any[], number: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
@@ -188,27 +188,33 @@ export default function ConnectionsPage() {
 
   return (
     <GameWrapper title={GAME_TITLE} gameId="">
-      <GameCompletedOverlay 
+      <GameCompletedOverlay
         isOpen={isGameComplete}
         variant={savedState?.gameState === 'lost' ? 'failure' : 'success'}
         title={savedState?.gameState === 'lost' ? t.lost : t.won}
         message={savedState?.gameState === 'lost' ? t.lost_msg : t.won_msg}
+        shareProps={{
+          gameType: 'connections',
+          difficulty,
+          puzzleNumber: gameData.number,
+          data: savedState?.foundGroups || []
+        }}
         solutionContent={
           <div className="flex flex-col gap-2 p-4 bg-white/5 rounded-xl border border-white/10 w-full max-w-sm">
-             <div className="text-xs font-black uppercase tracking-widest text-text-muted text-center mb-2">{t.groups}</div>
-             {gameData.groups.map((group, idx) => (
-                <div key={idx} className={`p-3 rounded-lg flex flex-col items-center justify-center text-center`} style={{ backgroundColor: group.color || 'rgba(255,255,255,0.1)' }}>
-                  <div className="font-bold text-bg-deep uppercase text-sm">{group.category}</div>
-                  <div className="text-bg-deep/80 text-xs">{group.words.join(', ')}</div>
-                </div>
-             ))}
+            <div className="text-xs font-black uppercase tracking-widest text-text-muted text-center mb-2">{t.groups}</div>
+            {gameData.groups.map((group, idx) => (
+              <div key={idx} className={`p-3 rounded-lg flex flex-col items-center justify-center text-center`} style={{ backgroundColor: group.color || 'rgba(255,255,255,0.1)' }}>
+                <div className="font-bold text-bg-deep uppercase text-sm">{group.category}</div>
+                <div className="text-bg-deep/80 text-xs">{group.words.join(', ')}</div>
+              </div>
+            ))}
           </div>
         }
       />
-      
+
       <div className="flex flex-col items-center justify-center flex-1 w-full py-8">
-        
-        <GameHeader 
+
+        <GameHeader
           title={GAME_TITLE}
           description={dynamicDescription}
           puzzleNumber={gameData.number}
@@ -224,12 +230,12 @@ export default function ConnectionsPage() {
         {/* Spacer for breathing room */}
         <div className="h-12 md:h-16" />
 
-        <ConnectionsGame 
-          groups={gameData.groups} 
+        <ConnectionsGame
+          groups={gameData.groups}
           difficulty={difficulty}
           puzzleNumber={gameData.number}
         />
-        
+
         <div className="mt-16 text-center text-[10px] md:text-xs font-black tracking-[0.3em] text-text-muted uppercase opacity-40">
           {dynamicHelper}
         </div>

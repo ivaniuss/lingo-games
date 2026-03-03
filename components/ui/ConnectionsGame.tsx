@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/context/LanguageContext';
 import { useGameStore } from '@/store/useGameStore';
 import { GameCompletedOverlay } from './GameCompletedOverlay';
+import { languages } from '@/lib/languages';
 
 interface Group {
   category: string;
@@ -137,46 +138,46 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
 
     const savedState = getGameState('connections', language);
     const alreadyCompleted = isGameComplete('connections', language);
-    
+
     // Check if the saved state matches the CURRENT groups (difficulty change or new day)
-    const isSamePuzzle = savedState && 
-                         savedState.puzzleNumber === puzzleNumber &&
-                         savedState.difficulty === difficulty &&
-                         savedState.language === language; // Verify language matches
+    const isSamePuzzle = savedState &&
+      savedState.puzzleNumber === puzzleNumber &&
+      savedState.difficulty === difficulty &&
+      savedState.language === language; // Verify language matches
 
     if (alreadyCompleted) {
-        // If completed, ensure we show the finished state
-        // Only load if the completed game was in THIS language.
-        // Since isGameComplete is now language-aware, this check is implicit.
-        
-        // But we still need to check if savedState matches language to display correct words
-        if (savedState?.language === language) {
-          defer(() => {
-            setAllWords(savedState?.allWords || []);
-            setSelectedWords(savedState?.selectedWords || []);
-            setFoundGroups(savedState?.foundGroups || []);
-            setMistakesRemaining(savedState?.mistakesRemaining ?? 0);
-            setGameState(savedState?.gameState === 'lost' ? 'lost' : 'won');
-          });
-        } else {
-           // If completed in this language but no state? (Unlikely)
-           // Or if state is from another language (shouldn't happen if keyed correctly? Wait, getGameState is NOT language keyed yet.)
-           // getGameState is global per game type. 
-           // So if I switch language, savedState might be from 'en'.
-           // If it is, we should NOT load it.
-           // Proceed to initialize fetch logic (fallback to new game?)
-           // But if alreadyCompleted is true, we want to show result.
-           // If I completed Spanish, savedState should be Spanish.
-           // If I completed English, then switch to Spanish, alreadyCompleted (Spanish) is false.
-           // So we fall through to else if (isSamePuzzle).
-           // isSamePuzzle checks language. So it will be false.
-           // So we initialize new game. Correct.
-        }
+      // If completed, ensure we show the finished state
+      // Only load if the completed game was in THIS language.
+      // Since isGameComplete is now language-aware, this check is implicit.
+
+      // But we still need to check if savedState matches language to display correct words
+      if (savedState?.language === language) {
+        defer(() => {
+          setAllWords((savedState?.allWords as { word: string; category: string; difficulty: number }[]) || []);
+          setSelectedWords(savedState?.selectedWords || []);
+          setFoundGroups((savedState?.foundGroups as Group[]) || []);
+          setMistakesRemaining(savedState?.mistakesRemaining ?? 0);
+          setGameState(savedState?.gameState === 'lost' ? 'lost' : 'won');
+        });
+      } else {
+        // If completed in this language but no state? (Unlikely)
+        // Or if state is from another language (shouldn't happen if keyed correctly? Wait, getGameState is NOT language keyed yet.)
+        // getGameState is global per game type. 
+        // So if I switch language, savedState might be from 'en'.
+        // If it is, we should NOT load it.
+        // Proceed to initialize fetch logic (fallback to new game?)
+        // But if alreadyCompleted is true, we want to show result.
+        // If I completed Spanish, savedState should be Spanish.
+        // If I completed English, then switch to Spanish, alreadyCompleted (Spanish) is false.
+        // So we fall through to else if (isSamePuzzle).
+        // isSamePuzzle checks language. So it will be false.
+        // So we initialize new game. Correct.
+      }
     } else if (isSamePuzzle) {
       defer(() => {
-        setAllWords(savedState.allWords || []);
+        setAllWords((savedState.allWords as { word: string; category: string; difficulty: number }[]) || []);
         setSelectedWords(savedState.selectedWords || []);
-        setFoundGroups(savedState.foundGroups || []);
+        setFoundGroups((savedState.foundGroups as Group[]) || []);
         setMistakesRemaining(savedState.mistakesRemaining ?? 4);
         setGameState(savedState.gameState || 'playing');
       });
@@ -224,7 +225,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
       setAllWords(allWords.filter(w => !selectedWords.includes(w.word)));
       setSelectedWords([]);
       setMessage(t.excellent);
-      
+
       if (foundGroups.length === groups.length - 1) {
         setGameState('won');
         setMessage(t.excellent);
@@ -284,8 +285,8 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
       {/* Found Groups */}
       <div className="w-full flex flex-col gap-2">
         {foundGroups.map((group, i) => (
-          <div 
-            key={i} 
+          <div
+            key={i}
             className={`w-full py-4 rounded-xl text-center font-black uppercase tracking-widest animate-in slide-in-from-top-4 ${getDifficultyColor(group.difficulty)}`}
           >
             <div className="text-xs opacity-80 mb-1">{group.category}</div>
@@ -303,7 +304,7 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
 
       {/* Word Grid */}
       {gameState === 'playing' && (
-        <div 
+        <div
           className="grid gap-2 md:gap-4 w-full"
           style={{ gridTemplateColumns: `repeat(${groupSize}, minmax(0, 1fr))` }}
         >
@@ -331,8 +332,8 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
           <div className="flex items-center gap-1.5 mb-2">
             <span className="text-[10px] uppercase font-black tracking-widest text-text-muted mr-2">{t.mistakes}</span>
             {Array.from({ length: groupSize }).map((_, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className={`w-3 h-3 rounded-full border border-white/20 ${i < mistakesRemaining ? 'bg-primary' : 'bg-transparent'}`}
               />
             ))}
@@ -386,24 +387,24 @@ export function ConnectionsGame({ groups, difficulty, puzzleNumber }: Connection
         </div>
       </div>
       {/* Standardized Completion Overlay */}
-      <GameCompletedOverlay 
+      <GameCompletedOverlay
         isOpen={gameState !== 'playing'}
         variant={gameState === 'won' ? 'success' : 'failure'}
         title={gameState === 'won' ? t.won : t.lost}
         message={gameState === 'won' ? t.won : t.lost}
         solutionContent={
-           <div className="w-full flex flex-col gap-2">
-             <div className="text-xs font-black uppercase tracking-widest text-text-muted mb-1 opacity-60">Correct Groups</div>
-             {groups.map((group, i) => (
-               <div 
-                 key={i} 
-                 className={`w-full py-2 rounded-lg text-center font-bold uppercase tracking-wide text-[10px] md:text-xs ${getDifficultyColor(group.difficulty)}`}
-               >
-                 <div className="opacity-80">{group.category}</div>
-                 <div className="text-[8px] md:text-[10px] mt-0.5 opacity-70 leading-tight">{group.words.join(', ')}</div>
-               </div>
-             ))}
-           </div>
+          <div className="w-full flex flex-col gap-2">
+            <div className="text-xs font-black uppercase tracking-widest text-text-muted mb-1 opacity-60">Correct Groups</div>
+            {groups.map((group, i) => (
+              <div
+                key={i}
+                className={`w-full py-2 rounded-lg text-center font-bold uppercase tracking-wide text-[10px] md:text-xs ${getDifficultyColor(group.difficulty)}`}
+              >
+                <div className="opacity-80">{group.category}</div>
+                <div className="text-[8px] md:text-[10px] mt-0.5 opacity-70 leading-tight">{group.words.join(', ')}</div>
+              </div>
+            ))}
+          </div>
         }
       />
     </div>

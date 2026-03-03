@@ -11,54 +11,48 @@ interface GameScore {
 }
 
 interface GameState {
-  // Wordle state
-  wordle?: {
-    guesses: string[];
-    currentGuess: string;
-    gameState: 'playing' | 'won' | 'lost';
-    targetWord: string;
-    puzzleNumber: number;
-  };
-  // Connections state
-  connections?: {
-    selectedWords: string[];
-    foundGroups: any[];
-    mistakesRemaining: number;
-    gameState: 'playing' | 'won' | 'lost';
-    allWords: any[];
-  };
-  // Grid state
-  grid?: {
-    gridData: string[][];
-    status: 'playing' | 'validating' | 'finished';
-    attemptsRemaining: number;
-    hintsRemaining?: number;
-  };
-  // Crossword state
-  crossword?: {
-    gameState: 'playing' | 'won' | 'lost';
-    userGrid: string[][];
-  };
+  puzzleNumber?: number;
+  difficulty?: 'easy' | 'normal' | 'hard';
+  language?: string;
+  gameState?: 'playing' | 'won' | 'lost';
+  // Wordle specific
+  guesses?: string[];
+  currentGuess?: string;
+  targetWords?: string[];
+  wordLength?: number;
+  maxGuesses?: number;
+  // Connections specific
+  selectedWords?: string[];
+  foundGroups?: unknown[];
+  allWords?: unknown[];
+  mistakesRemaining?: number;
+  // Grid specific
+  gridData?: (string | null)[][];
+  status?: 'playing' | 'validating' | 'finished';
+  attemptsRemaining?: number;
+  hintsRemaining?: number;
+  // Crossword specific
+  userGrid?: (string | null)[][];
 }
 
 interface GameStore {
   // Daily scores
   dailyScores: Record<GameType, GameScore>;
-  
+
   // Completion tracking
   completedGames: Record<string, boolean>;
-  
+
   // Game states (now supports dynamic keys for languages)
-  gameStates: Record<string, any>;
-  
+  gameStates: Record<string, GameState>;
+
   // Last play date for daily reset
   lastPlayDate: string;
-  
+
   // Actions
   recordWin: (game: GameType) => void;
   recordLoss: (game: GameType) => void;
-  saveGameState: (game: GameType, state: any, lang?: string) => void;
-  getGameState: (game: GameType, lang?: string) => any;
+  saveGameState: (game: GameType, state: GameState, lang?: string) => void;
+  getGameState: (game: GameType, lang?: string) => GameState | undefined;
   markComplete: (game: GameType, lang?: string) => void;
   isGameComplete: (game: GameType, lang?: string) => boolean;
   checkAndResetDaily: () => void;
@@ -124,16 +118,16 @@ export const useGameStore = create<GameStore>()(
         get().checkAndResetDaily();
         const key = lang ? `${game}-${lang}` : game;
         const specificState = get().gameStates[key];
-        
+
         if (specificState) return specificState;
-        
+
         // Strict Fallback Logic:
         // Only fall back to the legacy 'game' key (e.g. 'wordle') if the requested language is 'en'
         // This prevents 'es' games from loading 'en' state (e.g. "BECOME")
         if (lang === 'en' || !lang) {
-           return get().gameStates[game];
+          return get().gameStates[game];
         }
-        
+
         return undefined;
       },
 
@@ -165,7 +159,7 @@ export const useGameStore = create<GameStore>()(
       checkAndResetDaily: () => {
         const today = getTodayDate();
         const lastDate = get().lastPlayDate;
-        
+
         if (today !== lastDate) {
           // New day - reset everything
           set({

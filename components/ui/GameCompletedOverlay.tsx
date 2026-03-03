@@ -1,11 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+
 import { useLanguage } from '@/context/LanguageContext';
+
 import { X, ArrowLeft, Clock } from 'lucide-react';
 
-const TRANSLATIONS = {
+import { ShareResults } from './ShareResults';
+
+import { Language } from '@/lib/languages';
+
+const TRANSLATIONS: Record<Language | 'pt', {
+  won: string;
+  lost: string;
+  completed: string;
+  message: string;
+  nextGame: string;
+  backHome: string;
+  playAgain: string;
+  viewSolution: string;
+  close: string;
+}> = {
   en: {
     won: 'You Won!',
     lost: 'Game Over',
@@ -96,23 +112,29 @@ const TRANSLATIONS = {
   }
 };
 
-// ... imports
 interface GameCompletedOverlayProps {
   variant?: 'success' | 'failure' | 'neutral';
   title?: string;
   message?: string;
   isOpen?: boolean;
   onViewBoard?: () => void;
-  solutionContent?: React.ReactNode; 
+  solutionContent?: React.ReactNode;
+  shareProps?: {
+    gameType: 'wordle' | 'connections' | 'crossword';
+    difficulty: 'easy' | 'normal' | 'hard';
+    puzzleNumber: number;
+    data: unknown;
+  };
 }
 
-export function GameCompletedOverlay({ 
-  variant = 'neutral', 
-  title, 
+export function GameCompletedOverlay({
+  variant = 'neutral',
+  title,
   message,
   isOpen = true,
   onViewBoard,
-  solutionContent
+  solutionContent,
+  shareProps
 }: GameCompletedOverlayProps) {
   const { language } = useLanguage();
   const t = TRANSLATIONS[language as keyof typeof TRANSLATIONS] || TRANSLATIONS.en;
@@ -123,12 +145,12 @@ export function GameCompletedOverlay({
       const now = new Date();
       const midnight = new Date();
       midnight.setHours(24, 0, 0, 0);
-      
+
       const diff = midnight.getTime() - now.getTime();
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
+
       setTimeUntilMidnight(
         `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
       );
@@ -138,7 +160,7 @@ export function GameCompletedOverlay({
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, []);
-  
+
   // Only render when open
   if (!isOpen) return null;
 
@@ -175,7 +197,7 @@ export function GameCompletedOverlay({
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200 p-4 sm:p-6">
       <div className={`relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border ${currentStyle.border}`}>
         {/* Close Button - Positioned in corner */}
-        <button 
+        <button
           onClick={handleClose}
           className="absolute top-3 right-3 p-1.5 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
           aria-label={t.close}
@@ -197,7 +219,7 @@ export function GameCompletedOverlay({
                 {message || t.message}
               </p>
             )}
-            
+
             {/* Render the solution content if provided */}
             {solutionContent && (
               <div className="mt-4">
@@ -216,6 +238,13 @@ export function GameCompletedOverlay({
             </div>
           </div>
 
+          {/* Share Results */}
+          {shareProps && (
+            <div className="mb-6">
+              <ShareResults {...shareProps} />
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="space-y-3">
             {onViewBoard && (
@@ -226,7 +255,7 @@ export function GameCompletedOverlay({
                 {t.viewSolution}
               </button>
             )}
-            
+
             <Link
               href="/"
               className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-xl font-medium transition-all active:scale-[0.98]"

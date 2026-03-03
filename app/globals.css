@@ -232,9 +232,33 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Mejora para links y botones */
+/* Base Accessibility & Mobile Polish */
 a, button {
   -webkit-tap-highlight-color: transparent;
+  min-height: 44px; /* WCAG standard for touch targets */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+input[type="text"], input[type="email"], select {
+  font-size: 16px; /* Prevents auto-zoom on iOS */
+  min-height: 48px;
+}
+
+/* Improved responsiveness for containers */
+@media (max-width: 640px) {
+  .glass-panel {
+    padding: 1.5rem;
+    border-radius: 20px;
+  }
+  
+  .game-input-cell {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+  }
 }
 
 /* Mejora para imágenes y videos */

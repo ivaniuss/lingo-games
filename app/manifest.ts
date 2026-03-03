@@ -2,20 +2,27 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'LingoGames',
+    name: 'LingoGames | Daily Language Challenges',
     short_name: 'LingoGames',
-    description: 'Daily language challenges: Wordle, Crossword and Connections.',
+    description: 'Master languages with daily Wordle, Crossword and Connections puzzles.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0b1120',
+    background_color: '#05080a',
     theme_color: '#2DC9AC',
+    orientation: 'portrait',
     icons: [
       {
-        src: '/icon.svg',
-        sizes: 'any',
-        type: 'image/svg+xml',
-        purpose: 'any',
+        src: '/icon.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
+      {
+        src: '/icon.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      }
     ],
   }
 }
